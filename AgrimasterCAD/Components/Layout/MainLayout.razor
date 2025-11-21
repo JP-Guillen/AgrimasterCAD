@@ -1,23 +1,94 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<div class="d-flex flex-column h-100">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white py-3">
+        <div class="container px-5">
+            <a class="navbar-brand fw-bolder text-primary" href="/">
+                Mi Proyecto
+            </a>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 small fw-bolder">
+
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="/">Home</NavLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="/projects">Projects</NavLink>
+                    </li>
+
+                    <li class="nav-item">
+                        <NavLink class="nav-link" href="/contact">Contact</NavLink>
+                    </li>
+
+                    <AuthorizeView>
+                        <Authorized>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="accountMenu"
+                                   role="button" data-bs-toggle="dropdown">
+                                    @context.User.Identity?.Name
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <NavLink class="dropdown-item" href="/Account/Manage">Mi Cuenta</NavLink>
+                                    </li>
+                                    <li>
+                                        <form action="/Account/Logout" method="post" class="px-3">
+                                            <input type="hidden" name="returnUrl" value="/" />
+                                            <button type="submit" class="btn btn-link p-0 text-danger">
+                                                Cerrar sesión
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        </Authorized>
+
+                        <NotAuthorized>
+                            <li class="nav-item">
+                                <NavLink class="nav-link text-primary" href="/Account/Login">Login</NavLink>
+                            </li>
+
+                            <li class="nav-item">
+                                <NavLink class="nav-link text-primary" href="/Account/Register">Register</NavLink>
+                            </li>
+                        </NotAuthorized>
+                    </AuthorizeView>
+
+                </ul>
+            </div>
         </div>
+    </nav>
 
-        <article class="content px-4">
+    <main class="flex-shrink-0">
+        <div class="">
             @Body
-        </article>
+        </div>
     </main>
-</div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    <footer class="bg-white py-4 mt-auto">
+        <div class="container px-5">
+            <div class="row align-items-center justify-content-between flex-column flex-sm-row">
+                <div class="col-auto">
+                    <div class="small m-0">© @DateTime.Now.Year – Mi Proyecto</div>
+                </div>
+                <div class="col-auto">
+                    <a class="small" href="#">Privacy</a>
+                    <span class="mx-1">·</span>
+                    <a class="small" href="#">Terms</a>
+                    <span class="mx-1">·</span>
+                    <a class="small" href="#">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 </div>

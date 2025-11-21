@@ -1,91 +1,84 @@
 ﻿@page "/Account/Manage"
+@attribute [Authorize]
 
-@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
 @using AgrimasterCAD.Data
+@using Microsoft.AspNetCore.Components.Authorization
 
 @inject UserManager<ApplicationUser> UserManager
-@inject SignInManager<ApplicationUser> SignInManager
-@inject IdentityRedirectManager RedirectManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>Profile</PageTitle>
+<PageTitle>Mi Cuenta</PageTitle>
 
-<h3>Profile</h3>
-<StatusMessage />
+<div class="container px-5 py-5">
+    <div class="row">
 
-<div class="row">
-    <div class="col-xl-6">
-        <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <input type="text" value="@username" id="username" class="form-control" placeholder="Choose your username." disabled />
-                <label for="username" class="form-label">Username</label>
+        <!-- Sidebar -->
+        <div class="col-md-3 mb-4">
+            <div class="list-group shadow-sm rounded-3">
+
+                <NavLink href="/Account/Manage"
+                         class="list-group-item list-group-item-action">
+                    Perfil
+                </NavLink>
+
+                <NavLink href="/Account/Manage/Email"
+                         class="list-group-item list-group-item-action">
+                    Email
+                </NavLink>
+
+                <NavLink href="/Account/Manage/ChangePassword"
+                         class="list-group-item list-group-item-action">
+                    Cambiar Contraseña
+                </NavLink>
+
+                <NavLink href="/Account/Manage/TwoFactorAuthentication"
+                         class="list-group-item list-group-item-action">
+                    Two Factor
+                </NavLink>
+
+                <NavLink href="/Account/Manage/PersonalData"
+                         class="list-group-item list-group-item-action">
+                    Datos Personales
+                </NavLink>
+
             </div>
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" placeholder="Enter your phone number" />
-                <label for="Input.PhoneNumber" class="form-label">Phone number</label>
-                <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
+        </div>
+
+        <!-- Content -->
+        <div class="col-md-9">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-4">
+
+                    <h3 class="fw-bolder mb-4">Mi Perfil</h3>
+
+                    @if (user is null)
+                    {
+                        <p>Cargando...</p>
+                    }
+                    else
+                    {
+                        <p><strong>Email:</strong> @user.Email</p>
+                        <p><strong>Usuario:</strong> @user.UserName</p>
+                        <p><strong>ID:</strong> @user.Id</p>
+                    }
+
+                </div>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
-        </EditForm>
+        </div>
+
     </div>
 </div>
 
 @code {
     private ApplicationUser? user;
-    private string? username;
-    private string? phoneNumber;
-
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
 
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new();
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var currentUser = authState.User;
 
-        user = await UserManager.GetUserAsync(HttpContext.User);
-        if (user is null)
-        {
-            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
-            return;
-        }
-
-        username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
-
-        Input.PhoneNumber ??= phoneNumber;
-    }
-
-    private async Task OnValidSubmitAsync()
-    {
-        if (user is null)
-        {
-            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
-            return;
-        }
-
-        if (Input.PhoneNumber != phoneNumber)
-        {
-            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            if (!setPhoneResult.Succeeded)
-            {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
-                return;
-            }
-        }
-
-        await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
-    }
-
-    private sealed class InputModel
-    {
-        [Phone]
-        [Display(Name = "Phone number")]
-        public string? PhoneNumber { get; set; }
+        user = await UserManager.GetUserAsync(currentUser);
     }
 }
