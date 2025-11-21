@@ -12,44 +12,57 @@
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Manage email</PageTitle>
+<PageTitle>Correo electrónico</PageTitle>
 
-<h3>Manage email</h3>
+<div class="container px-5 py-5">
+    <div class="row justify-content-center">
 
-<StatusMessage Message="@message"/>
-<div class="row">
-    <div class="col-xl-6">
-        <form @onsubmit="OnSendEmailVerificationAsync" @formname="send-verification" id="send-verification-form" method="post">
-            <AntiforgeryToken />
-        </form>
-        <EditForm Model="Input" FormName="change-email" OnValidSubmit="OnValidSubmitAsync" method="post">
-            <DataAnnotationsValidator />
-            <ValidationSummary class="text-danger" role="alert" />
-            @if (isEmailConfirmed)
-            {
-                <div class="form-floating mb-3 input-group">
-                    <input type="text" value="@email" id="email" class="form-control" placeholder="Enter your email" disabled />
-                    <div class="input-group-append">
-                        <span class="h-100 input-group-text text-success font-weight-bold">✓</span>
-                    </div>
-                    <label for="email" class="form-label">Email</label>
+        <div class="col-md-7 col-lg-6">
+
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-5">
+
+                    <h2 class="fw-bolder text-center mb-4">Administrar Correo</h2>
+
+                    <StatusMessage Message="@message" />
+
+                    <form @onsubmit="OnSendEmailVerificationAsync" id="send-verification-form" method="post">
+                        <AntiforgeryToken />
+                    </form>
+
+                    <EditForm Model="@Input" OnValidSubmit="OnValidSubmitAsync">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Correo actual</label>
+                            <input class="form-control" value="@email" disabled />
+                            @if (!isEmailConfirmed)
+                            {
+                                <button type="submit" class="btn btn-link mt-2 p-0"
+                                        form="send-verification-form">
+                                    Enviar correo de verificación
+                                </button>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nuevo correo</label>
+                            <InputText class="form-control" @bind-Value="Input.NewEmail" />
+                            <ValidationMessage For="() => Input.NewEmail" />
+                        </div>
+
+                        <button class="btn btn-primary w-100 py-2 fw-bold" type="submit">
+                            Cambiar Correo
+                        </button>
+
+                    </EditForm>
+
                 </div>
-            }
-            else
-            {
-                <div class="form-floating mb-3">
-                    <input type="text" value="@email" id="email" class="form-control" placeholder="Enter your email" disabled />
-                    <label for="email" class="form-label">Email</label>
-                    <button type="submit" class="btn btn-link" form="send-verification-form">Send verification email</button>
-                </div>
-            }
-            <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.NewEmail" id="Input.NewEmail" class="form-control" autocomplete="email" aria-required="true" placeholder="Enter a new email" />
-                <label for="Input.NewEmail" class="form-label">New email</label>
-                <ValidationMessage For="() => Input.NewEmail" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
-        </EditForm>
+
+        </div>
+
     </div>
 </div>
 
@@ -59,17 +72,15 @@
     private string? email;
     private bool isEmailConfirmed;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
 
     [SupplyParameterFromForm(FormName = "change-email")]
-    private InputModel Input { get; set; } = default!;
+    private InputModel Input { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new();
-
         user = await UserManager.GetUserAsync(HttpContext.User);
+
         if (user is null)
         {
             RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
@@ -84,60 +95,56 @@
 
     private async Task OnValidSubmitAsync()
     {
-        if (Input.NewEmail is null || Input.NewEmail == email)
+        if (Input.NewEmail == email)
         {
-            message = "Your email is unchanged.";
+            message = "El correo no ha cambiado.";
             return;
         }
 
-        if (user is null)
-        {
-            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
-            return;
-        }
-
-        var userId = await UserManager.GetUserIdAsync(user);
-        var code = await UserManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
+        var userId = await UserManager.GetUserIdAsync(user!);
+        var code = await UserManager.GenerateChangeEmailTokenAsync(user!, Input.NewEmail);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmailChange").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["email"] = Input.NewEmail, ["code"] = code });
+            new Dictionary<string, object?> {
+                ["userId"] = userId,
+                ["email"] = Input.NewEmail,
+                ["code"] = code
+            });
 
-        await EmailSender.SendConfirmationLinkAsync(user, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
+        await EmailSender.SendConfirmationLinkAsync(
+            user!, Input.NewEmail, HtmlEncoder.Default.Encode(callbackUrl));
 
-        message = "Confirmation link to change email sent. Please check your email.";
+        message = "Se envió un enlace de confirmación a tu nuevo correo.";
     }
 
     private async Task OnSendEmailVerificationAsync()
     {
-        if (email is null)
-        {
+        if (email is null || user is null)
             return;
-        }
-
-        if (user is null)
-        {
-            RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
-            return;
-        }
 
         var userId = await UserManager.GetUserIdAsync(user);
         var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
         var callbackUrl = NavigationManager.GetUriWithQueryParameters(
             NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
-            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code });
+            new Dictionary<string, object?> {
+                ["userId"] = userId,
+                ["code"] = code
+            });
 
-        await EmailSender.SendConfirmationLinkAsync(user, email, HtmlEncoder.Default.Encode(callbackUrl));
+        await EmailSender.SendConfirmationLinkAsync(
+            user, email, HtmlEncoder.Default.Encode(callbackUrl));
 
-        message = "Verification email sent. Please check your email.";
+        message = "Correo de verificación enviado.";
     }
 
     private sealed class InputModel
     {
-        [Required]
-        [EmailAddress]
-        [Display(Name = "New email")]
+        [Required(ErrorMessage = "Campo obligatorio")]
+        [EmailAddress(ErrorMessage = "Correo inválido")]
         public string? NewEmail { get; set; }
     }
 }

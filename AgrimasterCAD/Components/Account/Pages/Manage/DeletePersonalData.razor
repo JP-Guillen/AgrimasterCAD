@@ -9,32 +9,51 @@
 @inject IdentityRedirectManager RedirectManager
 @inject ILogger<DeletePersonalData> Logger
 
-<PageTitle>Delete Personal Data</PageTitle>
+<PageTitle>Eliminar Cuenta</PageTitle>
 
-<StatusMessage Message="@message" />
+<div class="container px-5 py-5">
+    <div class="row justify-content-center">
 
-<h3>Delete Personal Data</h3>
+        <div class="col-md-6 col-lg-5">
 
-<div class="alert alert-warning" role="alert">
-    <p>
-        <strong>Deleting this data will permanently remove your account, and this cannot be recovered.</strong>
-    </p>
-</div>
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-body p-5">
 
-<div>
-    <EditForm Model="Input" FormName="delete-user" OnValidSubmit="OnValidSubmitAsync" method="post">
-        <DataAnnotationsValidator />
-        <ValidationSummary class="text-danger" role="alert" />
-        @if (requirePassword)
-        {
-            <div class="form-floating mb-3">
-                <InputText type="password" @bind-Value="Input.Password" id="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Please enter your password." />
-                <label for="Input.Password" class="form-label">Password</label>
-                <ValidationMessage For="() => Input.Password" class="text-danger" />
+                    <h2 class="fw-bolder text-center mb-3 text-danger">Eliminar Cuenta</h2>
+
+                    <StatusMessage Message="@message" />
+
+                    <div class="alert alert-warning">
+                        <p class="mb-1"><strong>Esta acción es permanente.</strong></p>
+                        <p class="mb-0">
+                            Se eliminarán todos tus datos y tu cuenta será cerrada para siempre.
+                        </p>
+                    </div>
+
+                    <EditForm Model="@Input" OnValidSubmit="OnValidSubmitAsync">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        @if (requirePassword)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Contraseña</label>
+                                <InputText type="password" class="form-control" @bind-Value="Input.Password" />
+                                <ValidationMessage For="@(() => Input.Password)" />
+                            </div>
+                        }
+
+                        <button class="btn btn-danger w-100 py-2 fw-bold">
+                            Eliminar definitivamente
+                        </button>
+                    </EditForm>
+
+                </div>
             </div>
-        }
-        <button class="w-100 btn btn-lg btn-danger" type="submit">Delete data and close my account</button>
-    </EditForm>
+
+        </div>
+
+    </div>
 </div>
 
 @code {
@@ -42,22 +61,19 @@
     private ApplicationUser? user;
     private bool requirePassword;
 
-    [CascadingParameter]
-    private HttpContext HttpContext { get; set; } = default!;
-
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
+    [CascadingParameter] private HttpContext HttpContext { get; set; } = default!;
+    [SupplyParameterFromForm] private InputModel Input { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new();
-
         user = await UserManager.GetUserAsync(HttpContext.User);
+
         if (user is null)
         {
             RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
             return;
         }
+
         requirePassword = await UserManager.HasPasswordAsync(user);
     }
 
@@ -71,22 +87,23 @@
 
         if (requirePassword && !await UserManager.CheckPasswordAsync(user, Input.Password))
         {
-            message = "Error: Incorrect password.";
+            message = "Error: Contraseña incorrecta.";
             return;
         }
 
         var result = await UserManager.DeleteAsync(user);
+
         if (!result.Succeeded)
         {
-            throw new InvalidOperationException("Unexpected error occurred deleting user.");
+            throw new InvalidOperationException("Error inesperado al eliminar al usuario.");
         }
 
         await SignInManager.SignOutAsync();
 
         var userId = await UserManager.GetUserIdAsync(user);
-        Logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
+        Logger.LogInformation("El usuario con ID '{UserId}' eliminó su cuenta.", userId);
 
-        RedirectManager.RedirectToCurrentPage();
+        RedirectManager.RedirectTo("/");
     }
 
     private sealed class InputModel
