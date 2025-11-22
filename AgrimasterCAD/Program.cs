@@ -1,6 +1,7 @@
 using AgrimasterCAD.Components;
 using AgrimasterCAD.Components.Account;
 using AgrimasterCAD.Data;
+using AgrimasterCAD.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -32,11 +33,26 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
         options.SignIn.RequireConfirmedAccount = true;
         options.Stores.SchemaVersion = IdentitySchemaVersions.Version3;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Administrador"));
+});
+
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<SolicitudService>();
+builder.Services.AddScoped<PagoService>();
+builder.Services.AddScoped<NotificacionService>();
+builder.Services.AddScoped<MetodoPagoService>();
+builder.Services.AddScoped<AgrimensorService>();
+builder.Services.AddScoped<ClienteService>();
 
 var app = builder.Build();
 

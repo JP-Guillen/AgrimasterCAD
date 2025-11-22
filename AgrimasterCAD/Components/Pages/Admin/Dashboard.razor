@@ -1,0 +1,63 @@
+@using AgrimasterCAD.Services
+@using Microsoft.AspNetCore.Authorization
+
+@page "/admin/dashboard"
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject DashboardService DashboardService
+
+<h2>Dashboard Administrador</h2>
+
+@if (datos == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-header">Solicitudes Pendientes</div>
+                <div class="card-body">
+                    <h3>@datos.SolicitudesPendientes</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-header">Planos en Proceso</div>
+                <div class="card-body">
+                    <h3>@datos.PlanosEnProceso</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-danger mb-3">
+                <div class="card-header">Pagos Pendientes</div>
+                <div class="card-body">
+                    <h3>@datos.PagosPendientes</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-header">Agrimensores Activos</div>
+                <div class="card-body">
+                    <h3>@datos.AgrimensoresActivos</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private AdminDashboardDto? datos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        datos = await DashboardService.GetDashboardDataAsync();
+    }
+}

@@ -1,0 +1,139 @@
+@using System.ComponentModel.DataAnnotations
+@using AgrimasterCAD.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@page "/admin/agregar-agrimensor"
+@attribute [Authorize(Roles = "Administrador")]
+
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+
+<h3>Agregar Agrimensor</h3>
+
+<EditForm Model="@Input" OnValidSubmit="CrearAgrimensor">
+    <DataAnnotationsValidator />
+    <ValidationSummary class="text-danger" />
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.NombreCompleto" class="form-control" id="nombre" />
+        <label for="nombre">Nombre Completo</label>
+        <ValidationMessage For="@(()=> Input.NombreCompleto)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.Email" class="form-control" id="email" />
+        <label for="email">Correo Electrónico</label>
+        <ValidationMessage For="@(()=> Input.Email)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.Telefono" class="form-control" id="telefono" />
+        <label for="telefono">Teléfono</label>
+        <ValidationMessage For="@(()=> Input.Telefono)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.NumeroCodia" class="form-control" id="codia" />
+        <label for="codia">Número CODIA</label>
+        <ValidationMessage For="@(()=> Input.NumeroCodia)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.Provincia" class="form-control" id="provincia" />
+        <label for="provincia">Provincia</label>
+        <ValidationMessage For="@(()=> Input.Provincia)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.Municipio" class="form-control" id="municipio" />
+        <label for="municipio">Municipio</label>
+        <ValidationMessage For="@(()=> Input.Municipio)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="Input.Direccion" class="form-control" id="direccion" />
+        <label for="direccion">Dirección</label>
+        <ValidationMessage For="@(()=> Input.Direccion)" />
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputText type="password" @bind-Value="Input.Password" class="form-control" id="password" />
+        <label for="password">Contraseña</label>
+        <ValidationMessage For="@(()=> Input.Password)" />
+    </div>
+
+    <button class="btn btn-primary">Crear Agrimensor</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(Mensaje))
+{
+    <p class="text-success mt-3">@Mensaje</p>
+}
+
+@code {
+
+    private string? Mensaje;
+
+    private AgrimensorInputModel Input { get; set; } = new();
+
+    private async Task CrearAgrimensor()
+    {
+        var user = new ApplicationUser
+        {
+            Email = Input.Email,
+            UserName = Input.Email,
+            NombreCompleto = Input.NombreCompleto,
+            PhoneNumber = Input.Telefono,
+            Provincia = Input.Provincia,
+            Municipio = Input.Municipio,
+            Direccion = Input.Direccion,
+            NumeroCodia = Input.NumeroCodia,
+            NotificacionesEmail = true
+        };
+
+        // Crear usuario
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (!result.Succeeded)
+        {
+            Mensaje = string.Join(", ", result.Errors.Select(e => e.Description));
+            return;
+        }
+
+        // Asignar rol Agrimensor
+        await UserManager.AddToRoleAsync(user, "Agrimensor");
+
+        Mensaje = "Agrimensor creado correctamente.";
+
+        // Opcional: redirigir a la lista de agrimensores
+        // NavigationManager.NavigateTo("/admin/agrimensores");
+    }
+
+    private class AgrimensorInputModel
+    {
+        [Required]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public string Telefono { get; set; } = string.Empty;
+
+        [Required]
+        public string NumeroCodia { get; set; } = string.Empty;
+
+        [Required]
+        public string Provincia { get; set; } = string.Empty;
+
+        [Required]
+        public string Municipio { get; set; } = string.Empty;
+
+        [Required]
+        public string Direccion { get; set; } = string.Empty;
+
+        [Required, MinLength(6)]
+        public string Password { get; set; } = string.Empty;
+    }
+}

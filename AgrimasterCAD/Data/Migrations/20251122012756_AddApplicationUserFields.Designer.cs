@@ -4,6 +4,7 @@ using AgrimasterCAD.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AgrimasterCAD.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251122012756_AddApplicationUserFields")]
+    partial class AddApplicationUserFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,243 +107,6 @@ namespace AgrimasterCAD.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.EstadoActividad", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comentario")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("Fecha")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SolicitudId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SolicitudId");
-
-                    b.ToTable("EstadoActividades");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.MetodoPagoCliente", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("NumeroEnmascarado")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Token")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("MetodosPagoCliente");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.Notificacion", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Fecha")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Leida")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Mensaje")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Notificaciones");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.Pago", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("FechaPago")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Metodo")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Monto")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("SolicitudId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UrlReciboTransferencia")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SolicitudId");
-
-                    b.ToTable("Pagos");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.PlanoFinal", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FechaSubida")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("SolicitudId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UrlFactura")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UrlPlano")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SolicitudId");
-
-                    b.ToTable("PlanosFinales");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.SolicitudDocumento", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("FechaSubida")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("SolicitudId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SolicitudId");
-
-                    b.ToTable("SolicitudDocumentos");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.SolicitudPlano", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AgrimensorId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ClienteId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Codigo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("CostoEstimado")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("CostoFinal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Estado")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("FechaAceptacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("FechaFinalizacion")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("FechaSolicitud")
-                        .HasColumnType("datetime2");
-
-                    b.Property<double>("Superficie")
-                        .HasColumnType("float");
-
-                    b.Property<string>("Titulo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("UbicacionLat")
-                        .HasColumnType("float");
-
-                    b.Property<double>("UbicacionLng")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgrimensorId");
-
-                    b.HasIndex("ClienteId");
-
-                    b.ToTable("SolicitudesPlano");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -497,89 +263,6 @@ namespace AgrimasterCAD.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.EstadoActividad", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.Entities.SolicitudPlano", "Solicitud")
-                        .WithMany("Actividades")
-                        .HasForeignKey("SolicitudId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Solicitud");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.MetodoPagoCliente", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.Notificacion", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.Pago", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.Entities.SolicitudPlano", "Solicitud")
-                        .WithMany()
-                        .HasForeignKey("SolicitudId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Solicitud");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.PlanoFinal", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.Entities.SolicitudPlano", "Solicitud")
-                        .WithMany()
-                        .HasForeignKey("SolicitudId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Solicitud");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.SolicitudDocumento", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.Entities.SolicitudPlano", "Solicitud")
-                        .WithMany("Documentos")
-                        .HasForeignKey("SolicitudId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Solicitud");
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.SolicitudPlano", b =>
-                {
-                    b.HasOne("AgrimasterCAD.Data.ApplicationUser", "Agrimensor")
-                        .WithMany()
-                        .HasForeignKey("AgrimensorId");
-
-                    b.HasOne("AgrimasterCAD.Data.ApplicationUser", "Cliente")
-                        .WithMany()
-                        .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Agrimensor");
-
-                    b.Navigation("Cliente");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -678,13 +361,6 @@ namespace AgrimasterCAD.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("AgrimasterCAD.Data.Entities.SolicitudPlano", b =>
-                {
-                    b.Navigation("Actividades");
-
-                    b.Navigation("Documentos");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,5 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/agrimensor/dashboard"
+@attribute [Authorize(Roles = "Agrimensor")]
+<h3>Dashboard Agrimensor</h3>
