@@ -1,0 +1,6 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/agrimensor/solicitud/subir-plano/{id:int}"
+@attribute [Authorize(Roles="Agrimensor")]
+
+<h3>Subir Plano Final</h3>

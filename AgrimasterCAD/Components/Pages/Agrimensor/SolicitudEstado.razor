@@ -1,0 +1,6 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/agrimensor/solicitud/estado/{id:int}"
+@attribute [Authorize(Roles="Agrimensor")]
+
+<h3>Actualizar Estado</h3>

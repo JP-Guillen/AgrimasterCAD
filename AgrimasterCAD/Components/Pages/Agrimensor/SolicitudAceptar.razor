@@ -1,0 +1,34 @@
+@page "/agrimensor/solicitud/aceptar/{id:int}"
+@attribute [Authorize(Roles = "Agrimensor")]
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using AgrimasterCAD.Data
+@using AgrimasterCAD.Services
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SolicitudService SolicitudService
+@inject NavigationManager Nav
+
+<h3>Aceptar Solicitud</h3>
+
+<button class="btn btn-success" @onclick="Aceptar">Aceptar Solicitud</button>
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    async Task Aceptar()
+    {
+        var auth = await AuthState;
+        var currentUser = await UserManager.GetUserAsync(auth.User);
+
+        if (currentUser == null)
+            return;
+
+        await SolicitudService.AceptarSolicitudAsync(id, currentUser.Id);
+        Nav.NavigateTo("/agrimensor/solicitudes-pendientes");
+    }
+}

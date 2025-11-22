@@ -1,0 +1,6 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/admin/solicitud/estado/{id:int}"
+@attribute [Authorize(Roles="Administrador")]
+
+<h3>Cambiar Estado</h3>

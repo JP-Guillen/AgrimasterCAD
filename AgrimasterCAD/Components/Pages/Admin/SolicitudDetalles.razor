@@ -1,0 +1,6 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/admin/solicitud/{id:int}"
+@attribute [Authorize(Roles="Administrador")]
+
+<h3>Detalles (Admin)</h3>

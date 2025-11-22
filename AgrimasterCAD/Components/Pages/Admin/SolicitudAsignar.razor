@@ -1,0 +1,6 @@
+@using Microsoft.AspNetCore.Authorization
+
+@page "/admin/solicitud/asignar/{id:int}"
+@attribute [Authorize(Roles="Administrador")]
+
+<h3>Asignar Agrimensor</h3>

@@ -1,0 +1,54 @@
+@using AgrimasterCAD.Services
+@using AgrimasterCAD.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+
+@page "/agrimensor/solicitudes-pendientes"
+@attribute [Authorize(Roles="Agrimensor")]
+
+@inject SolicitudService SolicitudService
+@inject NavigationManager Nav
+
+<h3>Solicitudes Pendientes</h3>
+
+@if (lista == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Código</th>
+            <th>Título</th>
+            <th>Fecha</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var s in lista)
+        {
+            <tr>
+                <td>@s.Codigo</td>
+                <td>@s.Titulo</td>
+                <td>@s.FechaSolicitud.ToShortDateString()</td>
+                <td>
+                    <button class="btn btn-primary"
+                            @onclick="@(()=> Nav.NavigateTo($"/agrimensor/solicitud/{s.Id}"))">
+                        Ver Detalles
+                    </button>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<SolicitudPlano>? lista;
+
+    protected override async Task OnInitializedAsync()
+    {
+        lista = await SolicitudService.ObtenerPendientesAsync();
+    }
+}
