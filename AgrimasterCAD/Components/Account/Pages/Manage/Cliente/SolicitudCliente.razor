@@ -1,0 +1,75 @@
+﻿@page "/cliente/solicitud/{id:int}"
+@attribute [Authorize(Roles = "Cliente")]
+
+@using AgrimasterCAD.Data.Entities
+@using AgrimasterCAD.Services
+@using Microsoft.AspNetCore.Authorization
+@inject SolicitudService SolicitudService
+@inject NavigationManager Nav
+
+<h3>Detalles de Solicitud</h3>
+
+@if (solicitud == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="card p-3 mb-3">
+        <h4>@solicitud.Titulo</h4>
+
+        <p><b>Código:</b> @solicitud.Codigo</p>
+        <p><b>Superficie:</b> @solicitud.Superficie m²</p>
+        <p><b>Estado:</b> @solicitud.Estado</p>
+        <p><b>Fecha Solicitud:</b> @solicitud.FechaSolicitud</p>
+        <p><b>Costo Estimado:</b> @solicitud.CostoEstimado.ToString("C")</p>
+    </div>
+
+    <h4>Documentos</h4>
+    @if (!solicitud.Documentos.Any())
+    {
+        <p>No tiene documentos.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var doc in solicitud.Documentos)
+            {
+                <li>
+                    <a href="@doc.Url" target="_blank">@doc.Nombre</a>
+                </li>
+            }
+        </ul>
+    }
+
+    <h4>Actividades</h4>
+    @if (!solicitud.Actividades.Any())
+    {
+        <p>Sin actividades registradas.</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var act in solicitud.Actividades)
+            {
+                <li>
+                    <b>@act.Estado:</b> @act.Comentario — @act.Fecha
+                </li>
+            }
+        </ul>
+    }
+
+    <button class="btn btn-secondary" @onclick="Volver">Volver</button>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    SolicitudPlano? solicitud;
+
+    protected override async Task OnInitializedAsync()
+    {
+        solicitud = await SolicitudService.ObtenerSolicitudAsync(id);
+    }
+
+    void Volver() => Nav.NavigateTo("/cliente/solicitudes");
+}

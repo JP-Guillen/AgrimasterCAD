@@ -1,0 +1,65 @@
+﻿@page "/cliente/solicitud/nueva"
+@attribute [Authorize(Roles = "Cliente")]
+
+@using AgrimasterCAD.Data
+@using AgrimasterCAD.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using AgrimasterCAD.Services
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SolicitudService SolicitudService
+@inject NavigationManager Nav
+
+<h3>Nueva Solicitud</h3>
+
+<EditForm Model="modelo" OnValidSubmit="Crear">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-floating mb-3">
+        <InputText @bind-Value="modelo.Titulo" class="form-control" />
+        <label>Título</label>
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputNumber @bind-Value="modelo.Superficie" class="form-control" />
+        <label>Superficie (m²)</label>
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputNumber @bind-Value="modelo.UbicacionLat" class="form-control" />
+        <label>Latitud</label>
+    </div>
+
+    <div class="form-floating mb-3">
+        <InputNumber @bind-Value="modelo.UbicacionLng" class="form-control" />
+        <label>Longitud</label>
+    </div>
+
+    <button class="btn btn-primary">Generar Cotización</button>
+</EditForm>
+
+@code {
+    SolicitudPlano modelo = new();
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+
+    async Task Crear()
+    {
+        var auth = await AuthState;
+        var user = await UserManager.GetUserAsync(auth.User);
+
+        if (user == null)
+            return;
+
+        modelo.ClienteId = user.Id;
+        modelo.Codigo = Guid.NewGuid().ToString().Substring(0, 8).ToUpper();
+        modelo.CostoEstimado = (decimal)modelo.Superficie * 25m;
+
+        var solicitud = await SolicitudService.CrearSolicitudAsync(modelo);
+        Nav.NavigateTo($"/cliente/solicitud/cotizacion/{solicitud.Id}");
+
+    }
+}

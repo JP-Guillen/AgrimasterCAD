@@ -1,0 +1,75 @@
+﻿@page "/cliente/solicitudes"
+@attribute [Authorize(Roles = "Cliente")]
+
+@using AgrimasterCAD.Data
+@using AgrimasterCAD.Data.Entities
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using AgrimasterCAD.Services
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SolicitudService SolicitudService
+@inject NavigationManager Navigation
+
+<h3>Mis Solicitudes</h3>
+
+@if (solicitudes == null)
+{
+    <p>Cargando...</p>
+}
+else if (!solicitudes.Any())
+{
+    <div class="alert alert-info">Aún no tienes solicitudes registradas.</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Título</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Costo</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var s in solicitudes)
+            {
+                <tr>
+                    <td>@s.Codigo</td>
+                    <td>@s.Titulo</td>
+                    <td>@s.FechaSolicitud.ToShortDateString()</td>
+                    <td>@s.Estado</td>
+                    <td>@s.CostoEstimado.ToString("C")</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" @onclick="() => Ver(s.Id)">Detalles</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+   @code {
+    private List<SolicitudPlano>? solicitudes;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthState { get; set; } = default!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthState;
+        var user = await UserManager.GetUserAsync(auth.User);
+
+        if (user == null)
+            return;
+
+        solicitudes = await SolicitudService.ObtenerSolicitudesClienteAsync(user.Id);
+    } 
+    void Ver(int id) => Navigation.NavigateTo($"/cliente/solicitud/{id}");
+}
+
+
+  

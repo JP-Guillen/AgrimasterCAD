@@ -1,0 +1,39 @@
+﻿@page "/cliente/solicitud/cotizacion/{id:int}"
+@attribute [Authorize(Roles = "Cliente")]
+
+@using AgrimasterCAD.Data.Entities
+@using AgrimasterCAD.Services
+@using Microsoft.AspNetCore.Authorization
+@inject SolicitudService SolicitudService
+@inject NavigationManager Nav
+
+<h3>Cotización Estimada</h3>
+
+@if (solicitud == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="card p-3">
+        <p><b>Título:</b> @solicitud.Titulo</p>
+        <p><b>Superficie:</b> @solicitud.Superficie m²</p>
+        <p><b>Costo Estimado:</b> @solicitud.CostoEstimado.ToString("C")</p>
+    </div>
+
+    <button class="btn btn-success mt-3" @onclick="Aceptar">Aceptar Cotización</button>
+    <button class="btn btn-secondary mt-3" @onclick="Volver">Modificar</button>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+    SolicitudPlano? solicitud;
+
+    protected override async Task OnInitializedAsync()
+    {
+        solicitud = await SolicitudService.ObtenerSolicitudAsync(id);
+    }
+
+    void Aceptar() => Nav.NavigateTo("/cliente/solicitudes");
+    void Volver() => Nav.NavigateTo("/cliente/solicitud/nueva");
+}
