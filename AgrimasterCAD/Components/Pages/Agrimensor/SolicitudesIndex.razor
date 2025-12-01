@@ -1,0 +1,244 @@
+@page "/agrimensor/solicitudes"
+@attribute [Authorize(Roles = "Agrimensor")]
+@rendermode InteractiveServer
+
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject SolicitudesService solicitudesService
+@inject NavigationManager navigationManager
+
+<PageTitle>Solicitudes del Agrimensor</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header text-center">
+            <h5 class="card-title fw-bold">Solicitudes</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Estado</label>
+                    <InputSelect class="form-select" @bind-Value="filtroEstado">
+                        <option value="">Todos</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Asignado">Asignado</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Pago Pendiente">Pago Pendiente</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Buscar (ID, Cliente, Dirección)</label>
+                    <InputText class="form-control" placeholder="Ej: Juan Pérez" @bind-Value="textoBusqueda" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Provincia</label>
+                    <InputText class="form-control" placeholder="Ej: Duarte" @bind-Value="filtroProvincia" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Municipio</label>
+                    <InputText class="form-control" placeholder="Ej: San Francisco de Macorís" @bind-Value="filtroMunicipio" />
+                </div>
+
+                 <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde</label>
+                    <InputDate class="form-control" @bind-Value="fechaDesde" @bind-Value:after="NormalizarRangoFechas" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <InputDate class="form-control" @bind-Value="fechaHasta" @bind-Value:after="NormalizarRangoFechas" />
+                </div>
+
+                <div class="col-md-3 d-flex align-items-end">
+                    <div class="form-check">
+                        <InputCheckbox class="form-check-input" @bind-Value="mostrarSoloMios" />
+                        <label class="form-check-label fw-bold">Mostrar solo mis solicitudes</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle shadow-sm">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th>ID</th>
+                            <th>Estado</th>
+                            <th>Cliente</th>
+                            <th>Provincia</th>
+                            <th>Municipio</th>
+                            <th>Dirección</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!solicitudesFiltradas.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center">No hay solicitudes disponibles.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var solicitud in solicitudesFiltradas)
+                            {
+                                <tr class="text-center">
+                                    <td>@solicitud.SolicitudId</td>
+                                    <td>
+                                        <span class="@ObtenerClaseEstado(solicitud.Estado)">
+                                            @solicitud.Estado
+                                        </span>
+                                    </td>
+                                    <td>@solicitud.Cliente.NombreCompleto</td>
+                                    <th>@solicitud.Provincia</th>
+                                    <th>@solicitud.Municipio</th>
+                                    <th>@solicitud.Direccion</th>
+                                    <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="/agrimensor/solicitud/@solicitud.SolicitudId">
+
+                                            @if (solicitud.Estado == "En Proceso")
+                                            {
+                                                <span><i class="bi bi-pencil-square me-1"></i> Editar</span>
+                                            }
+                                            else
+                                            {
+                                                <span><i class="bi bi-eye-fill me-1"></i> Ver</span>
+                                            }
+                                        </a>
+
+                                        @if (solicitud.Estado == "Pendiente" || solicitud.Estado == "Asignado")
+                                        {                            
+                                            <button class="btn btn-success btn-sm ms-1"
+                                                    @onclick="() => TomarSolicitud(solicitud)">
+                                                <i class="bi bi-hand-index-fill"></i> Tomar
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer text-muted">
+            <small>Total de solicitudes: @solicitudes.Count</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? userId;
+
+    private List<Solicitudes> solicitudes = new();
+
+    private string textoBusqueda = "";
+    private string filtroEstado = "";
+    private string filtroProvincia = "";
+    private string filtroMunicipio = "";
+    private DateTime? fechaDesde;
+    private DateTime? fechaHasta;
+    private bool mostrarSoloMios = true;
+
+    private IEnumerable<Solicitudes> solicitudesFiltradas => solicitudes
+        .Where(s =>
+            (string.IsNullOrEmpty(filtroEstado)
+                || s.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase))
+
+            && (!fechaDesde.HasValue || s.Fecha.Date >= fechaDesde.Value.Date)
+            && (!fechaHasta.HasValue || s.Fecha.Date <= fechaHasta.Value.Date)
+
+            && (string.IsNullOrEmpty(textoBusqueda)
+                || s.SolicitudId.ToString().Contains(textoBusqueda)
+                || (s.Cliente.NombreCompleto).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                || (s.Direccion).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroProvincia)
+                || (s.Provincia)
+                    .Contains(filtroProvincia, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroMunicipio)
+                || (s.Municipio)
+                    .Contains(filtroMunicipio, StringComparison.OrdinalIgnoreCase))
+
+            && (
+                    (mostrarSoloMios && s.AgrimensorId == userId)
+                    || 
+                    (!mostrarSoloMios && (s.AgrimensorId == null || s.Estado == "Pendiente"))
+                )
+        )
+        .OrderByDescending(s => s.Fecha);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        solicitudes = await solicitudesService.Listar(s => s.SolicitudId > 0);
+    }
+
+    private async Task TomarSolicitud(Solicitudes solicitud)
+    {
+        var actual = await solicitudesService.Buscar(solicitud.SolicitudId);
+
+        if (actual.Estado != "Pendiente" && actual.Estado != "Asignado") 
+        {
+            return;
+        }
+
+        if (actual.Estado == "Asignado" && actual.AgrimensorId != userId)
+        {
+            return;
+        }
+
+        if (actual.Estado == "Pendiente") 
+        {
+            actual.AgrimensorId = userId;
+        }
+        
+        actual.Estado = "En Proceso";
+        actual.FechaAceptada = DateTime.Now;
+
+        await solicitudesService.Guardar(actual);
+        solicitudes = await solicitudesService.Listar(s => s.SolicitudId > 0);
+    }
+
+    private void NormalizarRangoFechas()
+    {
+        if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
+        {
+            var temp = fechaDesde;
+            fechaDesde = fechaHasta;
+            fechaHasta = temp;
+        }
+    }
+
+    private string ObtenerClaseEstado(string estado)
+    {
+        return estado switch
+        {
+            "Pendiente" => "badge badge-secondary",
+            "Asignado" => "badge badge-primary",
+            "En Proceso" => "badge badge-warning text-dark",
+            "Pago Pendiente" => "badge badge-info",
+            "Finalizado" => "badge badge-success",
+            "Cancelado" => "badge badge-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+}
