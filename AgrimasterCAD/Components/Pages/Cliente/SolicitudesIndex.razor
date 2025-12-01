@@ -1,0 +1,204 @@
+@page "/cliente/solicitudes"
+@attribute [Authorize(Roles = "Cliente")]
+@rendermode InteractiveServer
+
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject NavigationManager navigationManager
+@inject SolicitudesService solicitudesService
+
+<PageTitle>Mis Solicitudes</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header text-center">
+            <h5 class="card-title fw-bold">Mis Solicitudes</h5>
+        </div>
+
+        <div class="card-body">
+            <div class="d-flex justify-content-md-end mb-3">
+                <a href="/cliente/crear-solicitud" class="btn btn-primary">
+                    <i class="bi bi-file-plus"></i> Crear Solicitud
+                </a>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Estado</label>
+                    <InputSelect class="form-select" @bind-Value="filtroEstado">
+                        <option value="">Todos</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Asignado">Asignado</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Pago Pendiente">Pago Pendiente</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Buscar (ID, Agrimensor, Dirección)</label>
+                    <InputText class="form-control" placeholder="Ej: Juan Pérez" @bind-Value="textoBusqueda" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Provincia</label>
+                    <InputText class="form-control" placeholder="Ej: Duarte" @bind-Value="filtroProvincia" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Municipio</label>
+                    <InputText class="form-control" placeholder="Ej: San Francisco de Macorís"
+                        @bind-Value="filtroMunicipio" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde</label>
+                    <InputDate class="form-control" @bind-Value="fechaDesde"
+                        @bind-Value:after="NormalizarRangoFechas" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <InputDate class="form-control" @bind-Value="fechaHasta"
+                        @bind-Value:after="NormalizarRangoFechas" />
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle shadow-sm">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th>ID</th>
+                            <th>Estado</th>
+                            <th>Agrimensor</th>
+                            <th>Provincia</th>
+                            <th>Municipio</th>
+                            <th>Dirección</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!solicitudesFiltradas.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center">No hay solicitudes disponibles.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var solicitud in solicitudes)
+                            {
+                                <tr>
+                                    <td>@solicitud.SolicitudId</td>
+                                    <td>
+                                        <span class="@ObtenerClaseEstado(solicitud.Estado)">
+                                            @solicitud.Estado
+                                        </span>
+                                    </td>
+                                    <td>@(solicitud.Agrimensor != null ? solicitud.Agrimensor.NombreCompleto : "Sin asignar")</td>
+                                    <td>@solicitud.Provincia</td>
+                                    <td>@solicitud.Municipio</td>
+                                    <td>@solicitud.Direccion</td>
+                                    <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
+                                    <td>
+                                        <a class="btn btn-primary btn-sm" href="/cliente/ver-solicitud/@solicitud.SolicitudId">Ver</a>
+
+                                        @if (solicitud.Estado == "Pendiente") 
+                                        {
+                                            <button type="button" class="btn btn-danger btn-sm">Eliminar</button>
+                                        } 
+                                        else if (solicitud.Estado == "Pago Pendiente") 
+                                        {
+                                            <a class="btn btn-success btn-sm" href="/cliente/pagar-solicitud/@solicitud.SolicitudId">Pagar</a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer text-muted">
+            <small>Total de solicitudes: @solicitudesFiltradas.Count()</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? userId;
+
+    private List<Solicitudes> solicitudes = new();
+
+    private string textoBusqueda = "";
+    private string filtroEstado = "";
+    private string filtroProvincia = "";
+    private string filtroMunicipio = "";
+    private DateTime? fechaDesde;
+    private DateTime? fechaHasta;
+
+    private IEnumerable<Solicitudes> solicitudesFiltradas => solicitudes
+        .Where(solicitud =>
+            (string.IsNullOrEmpty(filtroEstado)
+                || solicitud.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase))
+
+            && (!fechaDesde.HasValue || solicitud.Fecha.Date >= fechaDesde.Value.Date)
+            && (!fechaHasta.HasValue || solicitud.Fecha.Date <= fechaHasta.Value.Date)
+
+            && (string.IsNullOrEmpty(textoBusqueda)
+                || solicitud.SolicitudId.ToString().Contains(textoBusqueda)
+                || (solicitud.Agrimensor.NombreCompleto).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                || (solicitud.Direccion).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroProvincia)
+                || (solicitud.Provincia)
+                    .Contains(filtroProvincia, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroMunicipio)
+                || (solicitud.Municipio)
+                    .Contains(filtroMunicipio, StringComparison.OrdinalIgnoreCase))
+        )
+        .OrderByDescending(s => s.Fecha);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        solicitudes = await solicitudesService.Listar(s => s.ClienteId == userId);
+    }
+
+    private void NormalizarRangoFechas()
+    {
+        if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
+        {
+            var temp = fechaDesde;
+            fechaDesde = fechaHasta;
+            fechaHasta = temp;
+        }
+    }
+
+    private string ObtenerClaseEstado(string estado)
+    {
+        return estado switch
+        {
+            "Pendiente" => "badge bg-secondary",
+            "Asignado" => "badge bg-primary",
+            "En Proceso" => "badge bg-warning text-dark",
+            "Pago Pendiente" => "badge bg-info",
+            "Finalizado" => "badge bg-success",
+            "Cancelado" => "badge bg-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+}
