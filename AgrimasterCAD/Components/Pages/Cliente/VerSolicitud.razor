@@ -1,0 +1,322 @@
+@page "/cliente/ver-solicitud/{SolicitudId:int}"
+@attribute [Authorize(Roles = "Cliente")]
+@rendermode InteractiveServer
+
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject SolicitudesService solicitudesService
+@inject NavigationManager navigationManager
+
+<PageTitle>Detalle de Solicitud</PageTitle>
+
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header text-center">
+            <h4 class="card-title fw-bold">
+                <i class="bi bi-file-text-fill me-2"></i> Detalles de la Solicitud #@SolicitudId
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            @if (cargando)
+            {
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-3">Cargando la solicitud...</p>
+                </div>
+            }
+            else
+            {
+                <h5 class="fw-bold mb-3">Información General</h5>
+
+                <div class="row g-3 mb-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Estado</label>
+                        <input class="form-control" value="@solicitud!.Estado" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha de Solicitud</label>
+                        <input class="form-control" value="@solicitud.Fecha.ToString("dd/MM/yyyy")" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Costo Final</label>
+                        <input class="form-control"
+                            value="@(solicitud.CostoFinal?.ToString("C", new CultureInfo("es-DO")) ?? "Pendiente")"
+                            disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha Aceptada</label>
+                        <input class="form-control"
+                            value="@(solicitud.FechaAceptada?.ToString("dd/MM/yyyy") ?? "Pendiente")" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Fecha Finalizada</label>
+                        <input class="form-control"
+                            value="@(solicitud.FechaFinalizada?.ToString("dd/MM/yyyy") ?? "Pendiente")" disabled />
+                    </div>
+
+                    @if (solicitud.FechaCancelada != null)
+                    {
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold text-danger">Fecha Cancelada</label>
+                            <input class="form-control text-danger" value="@solicitud.FechaCancelada?.ToString("dd/MM/yyyy")"
+                                disabled />
+                        </div>
+                    }
+
+                </div>
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Información del Terreno</h5>
+
+                <div class="row g-3 mb-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Provincia</label>
+                        <input class="form-control" value="@solicitud.Provincia" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Municipio</label>
+                        <input class="form-control" value="@solicitud.Municipio" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <input class="form-control" value="@solicitud.Direccion" disabled />
+                    </div>
+
+                </div>
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Agrimensor Asignado</h5>
+
+                @if (solicitud.Agrimensor != null)
+                {
+                    <p><b>Nombre:</b> @solicitud.Agrimensor.NombreCompleto</p>
+                    <p><b>CODIA:</b> @solicitud.Agrimensor.NumeroCodia</p>
+                    <p><b>Email:</b> @solicitud.Agrimensor.Email</p>
+                    <p><b>Teléfono:</b> @solicitud.Agrimensor.PhoneNumber</p>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Sin asignar</span>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Documentos Subidos</h5>
+
+                @if (solicitud.Documentos != null && solicitud.Documentos.Any())
+                {
+                    @foreach (var documento in solicitud.Documentos)
+                    {
+                        <p>
+                            <b>@documento.Tipo:</b>
+                            <a class="btn btn-link" href="@documento.RutaArchivo" target="_blank">
+                                Ver PDF
+                            </a>
+                        </p>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No hay documentos disponibles.</p>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Plano</h5>
+
+                @if (solicitud.Plano != null)
+                {
+                    <a href="@solicitud.Plano.RutaArchivo" class="btn btn-info" target="_blank">
+                        <i class="bi bi-file-earmark-richtext-fill me-1"></i>
+                        Ver Plano
+                    </a>
+                }
+                else
+                {
+                    <span class="badge badge-warning text-dark">No se ha subido el plano aún</span>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Comprobante de Pago</h5>
+
+                @if (solicitud.ComprobantePago != null)
+                {
+                    <div class="card border-success shadow-sm mt-2" style="max-width:450px;">
+                        <div class="card-header bg-success text-white text-center fw-bold">
+                            🧾 Comprobante de Pago
+                        </div>
+
+                        <div class="card-body">
+                            <p class="mb-1"><b>ID:</b> @solicitud.ComprobantePago.ComprobantePagoId</p>
+                            <p class="mb-1"><b>Monto:</b>
+                                @solicitud.ComprobantePago.Monto.ToString("C", new CultureInfo("es-DO"))
+                            </p>
+                            <p class="mb-1"><b>Fecha:</b>
+                                @solicitud.ComprobantePago.Fecha.ToString("dd/MM/yyyy hh:mm tt")
+                            </p>
+                            <p class="mb-1"><b>Método:</b> @solicitud.ComprobantePago.Metodo</p>
+
+                            <hr />
+
+                            <p class="text-success text-center fw-bold mb-0">
+                                ✔ Pago procesado exitosamente
+                            </p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <span class="badge badge-secondary">Aún no se ha emitido comprobante</span>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Historial de Seguimiento</h5>
+
+                @if (solicitud.Seguimientos == null || !solicitud.Seguimientos.Any())
+                {
+                    <p class="text-muted">No hay seguimiento registrado.</p>
+                }
+                else
+                {
+                    @foreach (var seguimiento in solicitud.Seguimientos.OrderByDescending(s => s.Fecha))
+                    {
+                        <div class="alert alert-secondary">
+                            <b>@seguimiento.Fecha.ToString("dd/MM/yyyy HH:mm"):</b>
+                            @seguimiento.Comentario
+                        </div>
+                    }
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Historial de Pagos</h5>
+
+                @if (solicitud.Pagos != null && solicitud.Pagos.Any())
+                {
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Método</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Recibo de Transferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pago in solicitud.Pagos.OrderByDescending(p => p.Fecha))
+                            {
+                                <tr>
+                                    <td>@pago.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@pago.Metodo</td>
+                                    <td>@pago.Monto.ToString("C", new CultureInfo("es-DO"))</td>
+                                    <td>
+                                        <span class="@ObtenerClaseEstado(pago.Estado)">
+                                            @pago.Estado
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(pago.ReciboRuta))
+                                        {
+                                            <a href="@pago.ReciboRuta" target="_blank" class="btn btn-sm btn-primary">
+                                                Ver PDF
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <p class="text-muted">Aún no hay pagos registrados.</p>
+                }
+
+                <hr />
+
+                @if (solicitud.Estado == "Pago Pendiente")
+                {
+                    <div class="text-center mt-3">
+                        <a class="btn btn-success btn-lg" href="/cliente/pagar-solicitud/@solicitud.SolicitudId">
+                            <i class="bi bi-credit-card-fill me-2"></i>
+                            Pagar Ahora
+                        </a>
+                    </div>
+                }
+                else if (solicitud.Estado == "Pago en Revisión")
+                {
+                    <div class="alert alert-info text-center">
+                        El pago está en revisión por el agrimensor o el administrador.
+                    </div>
+                }
+            }
+
+        </div>
+
+        <div class="card-footer text-center">
+            <a href="/cliente/solicitudes" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int SolicitudId { get; set; }
+
+    private Solicitudes? solicitud;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        solicitud = await solicitudesService.Buscar(SolicitudId);
+
+        if (solicitud == null || solicitud.ClienteId != userId)
+        {
+            navigationManager.NavigateTo("/not-found");
+            return;
+        }
+
+        cargando = false;
+    }
+
+    private string ObtenerClaseEstado(string estado)
+    {
+        return estado switch
+        {
+            "Pendiente" => "badge bg-warning text-dark",
+            "Completado" => "badge bg-success",
+            "Rechazado" => "badge bg-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+}
