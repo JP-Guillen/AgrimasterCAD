@@ -38,12 +38,11 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
-
-    builder.Services.AddScoped<SolicitudesService>();
-    builder.Services.AddScoped<PagosService>();
-    builder.Services.AddScoped<ComprobantesPagoService>();
-    builder.Services.AddScoped<NotificacionesService>();
-    builder.Services.AddScoped<MetodosPagoService>();
+builder.Services.AddScoped<SolicitudesService>();
+builder.Services.AddScoped<PagosService>();
+builder.Services.AddScoped<ComprobantesPagoService>();
+builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<MetodosPagoService>();
 
 var app = builder.Build();
 
