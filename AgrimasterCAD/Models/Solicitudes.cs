@@ -8,12 +8,12 @@ public class Solicitudes
 {
     [Key]
     public int SolicitudId { get; set; }
-    public string ClienteId { get; set; }
+    public string ClienteId { get; set; } = string.Empty;
     public string? AgrimensorId { get; set; }
     public string Estado { get; set; } = "Pendiente";
-    public string Provincia { get; set; }
-    public string Municipio { get; set; }
-    public string Direccion { get; set; }
+    public string Provincia { get; set; } = string.Empty;
+    public string Municipio { get; set; } = string.Empty;
+    public string Direccion { get; set; } = string.Empty;
     public decimal? CostoFinal { get; set; }
     public DateTime Fecha { get; set; } = DateTime.Now;
     public DateTime? FechaAceptada { get; set; }
@@ -21,7 +21,7 @@ public class Solicitudes
     public DateTime? FechaCancelada { get; set; }
 
     [ForeignKey(nameof(ClienteId))]
-    public ApplicationUser Cliente { get; set; }
+    public ApplicationUser? Cliente { get; set; }
 
     [ForeignKey(nameof(AgrimensorId))]
     public ApplicationUser? Agrimensor { get; set; }

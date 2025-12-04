@@ -8,13 +8,13 @@ public class Notificaciones
 {
     [Key]
     public int NotificacionId { get; set; }
-    public string UsuarioId { get; set; }
-    public string Titulo { get; set; }
-    public string Mensaje { get; set; }
-    public string Tipo { get; set; }
+    public string UsuarioId { get; set; } = string.Empty;
+    public string Titulo { get; set; } = string.Empty;
+    public string Mensaje { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
     public bool Leida { get; set; } = false;
     public DateTime Fecha { get; set; } = DateTime.Now;
 
     [ForeignKey(nameof(UsuarioId))]
-    public ApplicationUser Usuario { get; set; }
+    public ApplicationUser? Usuario { get; set; }
 }

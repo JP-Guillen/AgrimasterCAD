@@ -8,10 +8,10 @@ public class MetodosPago
 {
     [Key]
     public int MetodoPagoId { get; set; }
-    public string UsuarioId { get; set; }
-    public string Tipo { get; set; }
-    public string Ultimos4Digitos { get; set; }
+    public string UsuarioId { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string Ultimos4Digitos { get; set; } = string.Empty;
 
     [ForeignKey(nameof(UsuarioId))]
-    public ApplicationUser Usuario { get; set; }
+    public ApplicationUser? Usuario { get; set; }
 }

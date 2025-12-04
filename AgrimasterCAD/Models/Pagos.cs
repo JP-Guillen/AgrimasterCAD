@@ -10,10 +10,10 @@ public class Pagos
     public int SolicitudId { get; set; }
     public string Estado { get; set; } = "Pendiente";
     public decimal Monto { get; set; }
-    public string Metodo { get; set; }
+    public string Metodo { get; set; } = string.Empty;
     public string? ReciboRuta { get; set; }
     public DateTime Fecha { get; set; } = DateTime.Now;
 
     [ForeignKey(nameof(SolicitudId))]
-    public Solicitudes Solicitud { get; set; }
+    public Solicitudes? Solicitud { get; set; }
 }
