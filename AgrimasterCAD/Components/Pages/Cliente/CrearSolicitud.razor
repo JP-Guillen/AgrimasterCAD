@@ -8,63 +8,67 @@
 
 <PageTitle>Crear Solicitud</PageTitle>
 
-<div class="container">
-    <div class="card shadow-lg">
-        <div class="card-header text-center">
-            <h5 class="card-title fw-bold">Crear Solicitud</h5>
-        </div>
-
-        <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label fw-bold">Cédula (Frontal y Posterior)</label>
-                <InputFile class="form-control" OnChange="OnCedulaChange" accept="application/pdf" />
-                <small class="text-muted">
-                    Debe subir un único PDF que contenga ambos lados de la cédula. (Máx. 5 MB)
-                </small>
+<EditForm Model="solicitud" OnValidSubmit="Guardar">
+    <DataAnnotationsValidator />
+    <div class="container py-5">
+        <div class="card shadow-lg">
+            <div class="card-header text-center">
+                <h5 class="card-title fw-bold">Crear Solicitud</h5>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Constancia Anotada</label>
-                <InputFile class="form-control" OnChange="OnConstanciaChange" accept="application/pdf" />
-                <small class="text-muted">
-                    Formato permitido: PDF (Máx. 5 MB)
-                </small>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Cédula (Frontal y Posterior)</label>
+                    <InputFile class="form-control" OnChange="OnCedulaChange" accept="application/pdf" />
+                    <small class="text-muted">
+                        Debe subir un único PDF que contenga ambos lados de la cédula. (Máx. 5 MB)
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Constancia Anotada</label>
+                    <InputFile class="form-control" OnChange="OnConstanciaChange" accept="application/pdf" />
+                    <small class="text-muted">
+                        Formato permitido: PDF (Máx. 5 MB)
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Provincia</label>
+                    <InputText class="form-control" placeholder="Ej: Duarte" @bind-Value="solicitud.Provincia" />
+                    <ValidationMessage For="(() => solicitud.Provincia)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Municipio</label>
+                    <InputText class="form-control" placeholder="Ej: San Francisco de Macorís" @bind-Value="solicitud.Municipio" />
+                    <ValidationMessage For="(() => solicitud.Municipio)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Dirección del Terreno</label>
+                    <InputText class="form-control" placeholder="Ej: Urbanización Los Maestros #8" @bind-Value="solicitud.Direccion" />
+                    <ValidationMessage For="(() => solicitud.Direccion)" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMensaje))
+                {
+                    <div class="alert alert-danger" role="alert">@errorMensaje</div>
+                }
             </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Provincia</label>
-                <InputText class="form-control" placeholder="Ej: Duarte" @bind-Value="solicitud.Provincia"></InputText>
+            <div class="card-footer text-center">
+                <a href="/cliente/solicitudes" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-floppy"></i> Guardar
+                </button>
             </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Municipio</label>
-                <InputText class="form-control" placeholder="Ej: San Francisco de Macorís"
-                    @bind-Value="solicitud.Municipio"></InputText>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-bold">Dirección del Terreno</label>
-                <InputText class="form-control" placeholder="Ej: Urbanización Los Maestros #8"
-                    @bind-Value="solicitud.Direccion"></InputText>
-            </div>
-
-            @if (!string.IsNullOrEmpty(errorMensaje))
-            {
-                <div class="alert alert-danger" role="alert">@errorMensaje</div>
-            }
-        </div>
-
-        <div class="card-footer text-center">
-            <a href="/cliente/solicitudes" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
-
-            <button type="button" class="btn btn-success" @onclick="Guardar">
-                <i class="bi bi-floppy"></i> Guardar
-            </button>
         </div>
     </div>
-</div>
+</EditForm>
 
 @code {
     private Solicitudes solicitud { get; set; } = new Solicitudes();
