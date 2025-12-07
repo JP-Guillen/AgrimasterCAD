@@ -1,0 +1,430 @@
+@page "/admin/solicitudes"
+@attribute [Authorize(Roles = "Administrador")]
+@rendermode InteractiveServer
+
+@inject SolicitudesService solicitudesService
+@inject NotificacionesService notificacionesService
+@inject NavigationManager navigationManager
+
+<PageTitle>Administrar Solicitudes</PageTitle>
+
+<div class="container py-5">
+    <div class="card shadow-lg">
+        <div class="card-header text-center">
+            <h4 class="card-title fw-bold">Administrar Solicitudes</h4>
+        </div>
+
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Estado</label>
+                    <InputSelect class="form-select" @bind-Value="filtroEstado">
+                        <option value="">Todos</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Asignado">Asignado</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Pago Pendiente">Pago Pendiente</option>
+                        <option value="Pago en Revisión">Pago en Revisión</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Buscar (ID, Cliente, Agrimensor, Dirección)</label>
+                    <InputText class="form-control" placeholder="Ej: Juan Pérez" @bind-Value="textoBusqueda" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Provincia</label>
+                    <InputText class="form-control" placeholder="Ej: Duarte" @bind-Value="filtroProvincia" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Municipio</label>
+                    <InputText class="form-control" placeholder="Ej: San Francisco de Macorís" @bind-Value="filtroMunicipio" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Desde</label>
+                    <InputDate class="form-control" @bind-Value="fechaDesde" />
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Hasta</label>
+                    <InputDate class="form-control" @bind-Value="fechaHasta" />
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle shadow-sm">
+                    <thead class="table-light">
+                        <tr class="text-center">
+                            <th>ID</th>
+                            <th>Estado</th>
+                            <th>Cliente</th>
+                            <th>Agrimensor</th>
+                            <th>Provincia</th>
+                            <th>Municipio</th>
+                            <th>Dirección</th>
+                            <th>Fecha</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @if (!solicitudesFiltradas.Any())
+                        {
+                            <tr><td colspan="8" class="text-center text-muted">No hay resultados.</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var solicitud in solicitudesPaginadas)
+                            {
+                                <tr class="text-center">
+                                    <td>@solicitud.SolicitudId</td>
+                                    <td>
+                                        <span class="@ObtenerClaseEstado(solicitud.Estado)">
+                                            @solicitud.Estado
+                                        </span>
+                                    </td>
+                                    <td>@solicitud.Cliente!.NombreCompleto</td>
+                                    <td>@(solicitud.Agrimensor != null ? solicitud.Agrimensor.NombreCompleto : "Sin asignar")</td>
+                                    <td>@solicitud.Provincia</td>
+                                    <td>@solicitud.Municipio</td>
+                                    <td>@solicitud.Direccion</td>
+                                    <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
+
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a class="btn btn-primary btn-sm" href="/admin/solicitud/@solicitud.SolicitudId">
+                                                <i class="bi bi-eye-fill"></i>
+                                            </a>
+
+                                            <button type="button" class="btn btn-warning btn-sm"
+                                                    @onclick="() => AbrirModalReasignar(solicitud)">
+                                                <i class="bi bi-arrow-left-right"></i>
+                                            </button>
+
+                                            @if (solicitud.Estado != "Cancelado" && solicitud.Estado != "Finalizado")
+                                            {
+                                                <button class="btn btn-danger btn-sm"
+                                                        @onclick="() => AbrirModalCancelar(solicitud)">
+                                                    <i class="bi bi-x-circle"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div class="card-footer">
+            <small class="text-muted">
+                Mostrando <b>@solicitudesPaginadas.Count()</b> de 
+                <b>@solicitudesFiltradas.Count()</b> resultados —
+                Total: <b>@solicitudes.Count</b> solicitudes
+            </small>
+
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => CambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+
+                    <li class="page-item active">
+                        <span class="page-link">@paginaActual de @totalPaginas</span>
+                    </li>
+
+                    <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => CambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+@if (mostrarModalReasignar)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">Reasignar Agrimensor</h5>
+                    <button class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p><b>Solicitud:</b> #@solicitudSeleccionada!.SolicitudId</p>
+
+                    <label class="form-label fw-bold">Nuevo agrimensor</label>
+                    <InputText class="form-control mb-2"
+                               placeholder="ID del agrimensor"
+                               @bind-Value="nuevoAgrimensorId" />
+
+                    @if (!string.IsNullOrEmpty(errorReasignar))
+                    {
+                        <div class="alert alert-danger">@errorReasignar</div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarModales">Cancelar</button>
+                    <button class="btn btn-warning" @onclick="ConfirmarReasignacion">Reasignar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@if (mostrarModalCancelar)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Cancelar Solicitud</h5>
+                    <button class="btn-close" @onclick="CerrarModales"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p>
+                        ¿Seguro que deseas cancelar la solicitud 
+                        <b>#@solicitudSeleccionada!.SolicitudId</b>?
+                    </p>
+
+                    <label class="form-label fw-bold">Motivo</label>
+                    <textarea class="form-control" @bind="motivoCancelacion"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarModales">Cerrar</button>
+                    <button class="btn btn-danger" @onclick="ConfirmarCancelacion">
+                        Cancelar Solicitud
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Solicitudes> solicitudes = new();
+
+    private string _textoBusqueda = "";
+    private string textoBusqueda
+    {
+        get => _textoBusqueda;
+        set
+        {
+            _textoBusqueda = value;
+            paginaActual = 1;
+        }
+    }
+
+    private string _filtroEstado = "";
+    private string filtroEstado
+    {
+        get => _filtroEstado;
+        set
+        {
+            _filtroEstado = value;
+            paginaActual = 1;
+        }
+    }
+
+    private string _filtroProvincia = "";
+    private string filtroProvincia
+    {
+        get => _filtroProvincia;
+        set
+        {
+            _filtroProvincia = value;
+            paginaActual = 1;
+        }
+    }
+
+    private string _filtroMunicipio = "";
+    private string filtroMunicipio
+    {
+        get => _filtroMunicipio;
+        set
+        {
+            _filtroMunicipio = value;
+            paginaActual = 1;
+        }
+    }
+
+    private DateTime? _fechaDesde;
+    private DateTime? fechaDesde
+    {
+        get => _fechaDesde;
+        set
+        {
+            _fechaDesde = value;
+            paginaActual = 1;
+            NormalizarRangoFechas();
+        }
+    }
+
+    private DateTime? _fechaHasta;
+    private DateTime? fechaHasta
+    {
+        get => _fechaHasta;
+        set
+        {
+            _fechaHasta = value;
+            paginaActual = 1;
+            NormalizarRangoFechas();
+        }
+    }
+
+    private Solicitudes? solicitudSeleccionada;
+
+    private bool mostrarModalReasignar = false;
+    private bool mostrarModalCancelar = false;
+
+    private string nuevoAgrimensorId = "";
+    private string motivoCancelacion = "";
+    private string? errorReasignar;
+
+    private int paginaActual = 1;
+    private int tamanoPagina = 10;
+    private int totalPaginas => Math.Max(1, (int)Math.Ceiling((double)solicitudesFiltradas.Count() / tamanoPagina));
+
+    protected override async Task OnInitializedAsync()
+    {
+        solicitudes = await solicitudesService.Listar(s => s.SolicitudId > 0);
+    }
+
+    private IEnumerable<Solicitudes> solicitudesFiltradas =>
+        solicitudes.Where(s =>
+            (string.IsNullOrEmpty(textoBusqueda)
+                || s.SolicitudId.ToString().Contains(textoBusqueda)
+                || s.Cliente!.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                || (s.Agrimensor != null && s.Agrimensor.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                || s.Direccion.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroEstado)
+                || s.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroProvincia)
+                || s.Provincia.Contains(filtroProvincia, StringComparison.OrdinalIgnoreCase))
+
+            && (string.IsNullOrEmpty(filtroMunicipio)
+                || s.Municipio.Contains(filtroMunicipio, StringComparison.OrdinalIgnoreCase))
+
+            && (!fechaDesde.HasValue || s.Fecha.Date >= fechaDesde.Value.Date)
+            && (!fechaHasta.HasValue || s.Fecha.Date <= fechaHasta.Value.Date)
+        )
+        .OrderByDescending(s => s.Fecha);
+
+    private IEnumerable<Solicitudes> solicitudesPaginadas =>
+        solicitudesFiltradas
+            .Skip((paginaActual - 1) * tamanoPagina)
+            .Take(tamanoPagina);
+
+    private void AbrirModalReasignar(Solicitudes sol)
+    {
+        solicitudSeleccionada = sol;
+        nuevoAgrimensorId = "";
+        mostrarModalReasignar = true;
+    }
+
+    private void AbrirModalCancelar(Solicitudes sol)
+    {
+        solicitudSeleccionada = sol;
+        motivoCancelacion = "";
+        mostrarModalCancelar = true;
+    }
+
+    private void CerrarModales()
+    {
+        mostrarModalCancelar = false;
+        mostrarModalReasignar = false;
+        solicitudSeleccionada = null;
+    }
+
+    private async Task ConfirmarReasignacion()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoAgrimensorId))
+        {
+            errorReasignar = "Debe ingresar un ID válido.";
+            return;
+        }
+
+        var solicitud = await solicitudesService.Buscar(solicitudSeleccionada!.SolicitudId);
+
+        solicitud!.AgrimensorId = nuevoAgrimensorId;
+        solicitud.Estado = "Asignado";
+
+        await solicitudesService.Guardar(solicitud);
+
+        await notificacionesService.Crear(solicitud.ClienteId,
+            "Solicitud reasignada",
+            $"Tu solicitud #{solicitud.SolicitudId} fue reasignada a un nuevo agrimensor.",
+            "Warning");
+
+        CerrarModales();
+    }
+
+    private async Task ConfirmarCancelacion()
+    {
+        var solicitud = await solicitudesService.Buscar(solicitudSeleccionada!.SolicitudId);
+
+        solicitud!.Estado = "Cancelado";
+        solicitud.FechaCancelada = DateTime.Now;
+
+        await solicitudesService.Guardar(solicitud);
+
+        await notificacionesService.Crear(solicitud.ClienteId,
+            "Solicitud cancelada",
+            $"Tu solicitud #{solicitud.SolicitudId} fue cancelada. Motivo: {motivoCancelacion}",
+            "Danger");
+
+        CerrarModales();
+    }
+
+    private void CambiarPagina(int pagina)
+    {
+        if (pagina < 1 || pagina > totalPaginas)
+            return;
+
+        paginaActual = pagina;
+    }
+
+    private void NormalizarRangoFechas()
+    {
+        if (fechaDesde.HasValue && fechaHasta.HasValue && fechaHasta < fechaDesde)
+        {
+            var temp = fechaDesde;
+            fechaDesde = fechaHasta;
+            fechaHasta = temp;
+        }
+    }
+
+    private static string ObtenerClaseEstado(string estado)
+    {
+        return estado switch
+        {
+            "Pendiente" => "badge bg-secondary",
+            "Asignado" => "badge bg-primary",
+            "En Proceso" => "badge bg-warning text-dark",
+            "Pago Pendiente" => "badge bg-info",
+            "Pago en Revisión" => "badge bg-warning text-dark",
+            "Finalizado" => "badge bg-success",
+            "Cancelado" => "badge bg-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+}
