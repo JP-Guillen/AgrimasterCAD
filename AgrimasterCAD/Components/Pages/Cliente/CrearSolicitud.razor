@@ -4,6 +4,7 @@
 
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject SolicitudesService solicitudesService
+@inject NotificacionesService notificacionesService
 @inject NavigationManager navigationManager
 
 <PageTitle>Crear Solicitud</PageTitle>
@@ -147,6 +148,13 @@
 
             if (await solicitudesService.Guardar(solicitud))
             {
+                await notificacionesService.Crear(
+                    solicitud.ClienteId,
+                    "Solicitud creada",
+                    $"Tu solicitud #{solicitud.SolicitudId} fue registrada correctamente. Te avisaremos cuando un agrimensor la tome.",
+                    "Success"
+                );
+
                 navigationManager.NavigateTo("/cliente/solicitudes");
             }
             else
