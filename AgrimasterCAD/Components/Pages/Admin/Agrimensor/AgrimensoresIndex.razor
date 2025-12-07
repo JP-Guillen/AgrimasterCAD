@@ -22,10 +22,9 @@
 
             <div class="row g-3 mb-3">
                 <div class="col-md-4">
-                    <label class="form-label fw-bold">Buscar (Nombre, Cédula, Email, CODIA)</label>
-                    <InputText class="form-control"
-                               placeholder="Escribe para buscar..."
-                               @bind-Value="textoBusqueda" />
+                    <label class="form-label fw-bold">Buscar (Nombre, Cédula, Email, Teléfono, CODIA)</label>
+                    <InputText class="form-control" placeholder="Escribe para buscar..." @bind-Value="textoBusqueda" />
+                </div>
 
                 <div class="col-md-3">
                     <label class="form-label fw-bold">Estado</label>
@@ -88,6 +87,11 @@
                                                 <i class="bi bi-pencil-square"></i>
                                             </a>
 
+                                            <button class="btn btn-warning btn-sm"
+                                                    @onclick="() => PrepararReset(agrimensor)">
+                                                <i class="bi bi-key-fill"></i>
+                                            </button>
+
                                         <button class="btn btn-danger btn-sm"
                                                 @onclick="() => PrepararEliminacion(ag)">
                                             Eliminar
@@ -108,24 +112,47 @@
     </div>
 </div>
 
-@if (agrimensorAEliminar != null)
+@if (usuarioAResetear != null)
 {
     <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,.5);">
         <div class="modal-dialog">
             <div class="modal-content">
 
                 <div class="modal-header">
-                    <h5 class="modal-title">Confirmar eliminación</h5>
-                    <button type="button" class="btn-close" @onclick="CancelarEliminacion"></button>
+                    <h5 class="modal-title">
+                        Restablecer Contraseña
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CancelarReset"></button>
                 </div>
 
                 <div class="modal-body">
-                    <p>¿Seguro que deseas eliminar al agrimensor <strong>@agrimensorAEliminar.NombreCompleto</strong>?</p>
+                    <p>¿Deseas restablecer la contraseña del usuario
+                        <strong>@usuarioAResetear.NombreCompleto</strong>?</p>
+
+                    @if (!string.IsNullOrEmpty(passwordGenerada))
+                    {
+                        <div class="alert alert-success text-center">
+                            Nueva contraseña:<br />
+                            <strong>@passwordGenerada</strong>
+                        </div>
+                    }
                 </div>
 
                 <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="CancelarEliminacion">Cancelar</button>
-                    <button class="btn btn-danger" @onclick="Eliminar">Eliminar</button>
+                    <button class="btn btn-secondary" @onclick="CancelarReset">Cancelar</button>
+
+                    @if (string.IsNullOrEmpty(passwordGenerada))
+                    {
+                        <button class="btn btn-warning" @onclick="ResetearPassword">
+                            <i class="bi bi-arrow-clockwise"></i> Restablecer
+                        </button>
+                    }
+                    else
+                    {
+                        <button class="btn btn-primary" @onclick="CancelarReset">
+                            Listo
+                        </button>
+                    }
                 </div>
 
             </div>
@@ -153,9 +180,16 @@
         agrimensores = users.ToList();
     }
 
-    private void PrepararEliminacion(ApplicationUser ag)
+    private void PrepararReset(ApplicationUser user)
     {
-        agrimensorAEliminar = ag;
+        usuarioAResetear = user;
+        passwordGenerada = null;
+    }
+
+    private void CancelarReset()
+    {
+        usuarioAResetear = null;
+        passwordGenerada = null;
     }
 
     private void CancelarEliminacion()
@@ -163,14 +197,42 @@
         agrimensorAEliminar = null;
     }
 
-    private async Task Eliminar()
+    private async Task ResetearPassword()
     {
-        if (agrimensorAEliminar != null)
-        {
-            await UserManager.DeleteAsync(agrimensorAEliminar);
+        if (usuarioAResetear == null)
+            return;
 
-            agrimensores.Remove(agrimensorAEliminar);
-            agrimensorAEliminar = null;
+        var random = new Random();
+        passwordGenerada = $"Temp{random.Next(1000, 9999)}!";
+
+        var token = await UserManager.GeneratePasswordResetTokenAsync(usuarioAResetear);
+
+        var result = await UserManager.ResetPasswordAsync(usuarioAResetear, token, passwordGenerada);
+
+        if (!result.Succeeded)
+        {
+            passwordGenerada = "Error al restablecer contraseña.";
         }
+
+        StateHasChanged();
+    }
+
+    private bool EstaDeshabilitado(ApplicationUser user)
+    {
+        return user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow;
+    }
+
+    private async Task CambiarEstado(ApplicationUser user)
+    {
+        if (EstaDeshabilitado(user))
+        {
+            user.LockoutEnd = null;
+        }
+        else
+        {
+            user.LockoutEnd = DateTime.UtcNow.AddYears(200);
+        }
+
+        await UserManager.UpdateAsync(user);
     }
 }
