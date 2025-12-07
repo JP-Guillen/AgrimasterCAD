@@ -7,16 +7,16 @@
 @inject MetodosPagoService metodosPagoService
 @inject PagosService pagosService
 @inject ComprobantesPagoService comprobantesPagoService
+@inject NotificacionesService notificacionesService
 @inject NavigationManager navigationManager
-
+  
 <PageTitle>Pagar Solicitud</PageTitle>
 
-<div class="container">
+<div class="container py-5">
     <div class="card shadow-lg">
         <div class="card-header text-center">
             <h4 class="card-title fw-bold">
-                <i class="bi bi-credit-card-fill me-2"></i>
-                Pago de la Solicitud #@SolicitudId
+                <i class="bi bi-credit-card-fill"></i> Pago de la Solicitud #@SolicitudId
             </h4>
         </div>
 
@@ -47,7 +47,7 @@
                             disabled />
                     </div>
 
-                    <h5 class="fw-bold mt-4">Seleccione el método de pago</h5>
+                    <h5 class="fw-bold mt-3">Seleccione el método de pago</h5>
 
                     <select class="form-select mb-3" @bind="metodoPago">
                         <option value="">Seleccione</option>
@@ -69,24 +69,24 @@
                                     <option value="@tarjeta.MetodoPagoId">@tarjeta.Tipo (**** @tarjeta.Ultimos4Digitos)</option>
                                 }
                                 <option value="0">Usar otra tarjeta</option>
-                            </select>
+                            </select>   
                         }
                         else
                         {
-                            <div class="alert alert-info">
+                            <div class="alert alert-info mt-3">
                                 No tienes tarjetas guardadas. Introduce una nueva tarjeta.
                             </div>
 
                             tarjetaSeleccionadaId = 0;
                         }
 
-                        @if (tarjetaSeleccionadaId == 0)
+                        @if (tarjetaSeleccionadaId == 0)    
                         {
-                            <h6 class="fw-bold">Nueva tarjeta</h6>
+                            <label class="form-label fw-bold">Nueva tarjeta</label>
 
-                            <input class="form-control mb-2" placeholder="Número de tarjeta" @bind="nuevaTarjetaNumero" />
-                            <input class="form-control mb-2" placeholder="CVV" @bind="nuevaTarjetaCVV" />
-                            <input class="form-control mb-2" placeholder="MM/YY" @bind="nuevaTarjetaExp" />
+                            <input class="form-control mb-3" placeholder="Número de tarjeta" @bind="nuevaTarjetaNumero" />
+                            <input class="form-control mb-3" placeholder="CVV" @bind="nuevaTarjetaCVV" />
+                            <input class="form-control mb-3" placeholder="MM/YY" @bind="nuevaTarjetaExp" />
                         }
                     }
 
@@ -96,7 +96,7 @@
                             Debe subir un comprobante de pago en PDF.
                         </div>
 
-                        <InputFile class="form-control" OnChange="OnComprobanteChange" accept="application/pdf" />
+                        <InputFile class="form-control mb-3" OnChange="OnComprobanteChange" accept="application/pdf" />
                     }
 
                     @if (metodoPago == "Efectivo")
@@ -106,24 +106,24 @@
                         </div>
                     }
 
-                    <button class="btn btn-success mt-4" @onclick="ProcesarPago">
-                        <i class="bi bi-check-circle-fill me-2"></i>
-                        Confirmar Pago
-                    </button>
-
-                    @if (!string.IsNullOrEmpty(error))
+                    @if (!string.IsNullOrEmpty(errorMensaje))
                     {
-                        <div class="alert alert-danger mt-2">@error</div>
+                        <div class="alert alert-danger mt-3">@errorMensaje</div>
                     }
                 }
             }
-
         </div>
 
-        <div class="card-footer text-center">
-            <a class="btn btn-secondary" href="/cliente/solicitudes">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
+        <div class="card-footer">
+            <div class="d-flex justify-content-center gap-2">
+                <a class="btn btn-secondary" href="/cliente/solicitudes">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+
+                <button class="btn btn-success" @onclick="ProcesarPago" disabled="@guardando">
+                    <i class="bi bi-check-circle-fill"></i> @(guardando ? "Procesando..." : "Confirmar Pago")
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -142,8 +142,9 @@
     private IBrowserFile? comprobante;
     private string metodoPago = "";
 
-    private string? error;
+    private string? errorMensaje;
     private bool cargando = true;
+    private bool guardando = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,69 +174,120 @@
 
     private void OnComprobanteChange(InputFileChangeEventArgs e)
     {
-        error = null;
+        errorMensaje = null;
 
         comprobante = e.File;
 
         if (comprobante.Size > 5 * 1024 * 1024)
         {
-            error = "El comprobante no puede superar los 5 MB.";
+            errorMensaje = "El comprobante no puede superar los 5 MB.";
             comprobante = null;
         }
     }
 
     private async Task ProcesarPago()
     {
-        error = null;
+        if (guardando) return;
+        guardando = true;
 
-        if (string.IsNullOrWhiteSpace(metodoPago))
+        try 
         {
-            error = "Debe seleccionar un método de pago.";
-            return;
-        }
+            errorMensaje = null;
 
-        if (metodoPago == "Transferencia" && comprobante == null)
-        {
-            error = "Debe subir un comprobante PDF.";
-            return;
-        }
-
-        var pago = new Pagos
-        {
-            SolicitudId = solicitud!.SolicitudId,
-            Metodo = metodoPago,
-            Monto = solicitud.CostoFinal ?? 0,
-            Estado = metodoPago == "Tarjeta" ? "Completado" : "Pendiente"
-        };
-
-        if (metodoPago == "Transferencia")
-        {
-            pago.ReciboRuta = await pagosService.GuardarComprobante(comprobante!, SolicitudId);
-        }
-
-        await pagosService.Guardar(pago);
-
-
-        if (metodoPago == "Tarjeta")
-        {
-            var comprobante = new ComprobantesPago
+            if (string.IsNullOrWhiteSpace(metodoPago))
             {
-                SolicitudId = solicitud.SolicitudId,
-                Monto = pago.Monto,
+                errorMensaje = "Debe seleccionar un método de pago.";
+                return;
+            }
+
+            if (metodoPago == "Transferencia" && comprobante == null)
+            {
+                errorMensaje = "Debe subir un comprobante PDF.";
+                return;
+            }
+
+            var pago = new Pagos
+            {
+                SolicitudId = solicitud!.SolicitudId,
+                Metodo = metodoPago,
+                Monto = solicitud.CostoFinal ?? 0,
+                Estado = metodoPago == "Tarjeta" ? "Completado" : "Pendiente"
             };
 
-            await comprobantesPagoService.Guardar(comprobante);
+            if (metodoPago == "Transferencia")
+            {
+                pago.ReciboRuta = await pagosService.GuardarComprobante(comprobante!, SolicitudId);
+            }
 
-            solicitud.Estado = "Finalizado";
-            solicitud.FechaFinalizada = DateTime.Now;
+            await pagosService.Guardar(pago);
+
+            if (metodoPago == "Tarjeta")
+            {
+                var comprobante = new ComprobantesPago
+                {
+                    SolicitudId = solicitud.SolicitudId,
+                    Monto = pago.Monto,
+                    Metodo = metodoPago
+                };
+
+                await comprobantesPagoService.Guardar(comprobante);
+
+                await notificacionesService.Crear(
+                    solicitud.ClienteId,
+                    "Pago completado",
+                    $"Tu pago de la solicitud #{solicitud.SolicitudId} fue procesado exitosamente.",
+                    "Success"
+                );
+
+                solicitud.Estado = "Finalizado";
+                solicitud.FechaFinalizada = DateTime.Now;
+            }
+            else
+            {
+            
+                if (metodoPago == "Transferencia")
+                {
+                    await notificacionesService.Crear(
+                        solicitud.ClienteId,
+                        "Pago en revisión",
+                        $"Tu comprobante para la solicitud #{solicitud.SolicitudId} fue recibido y está en revisión.",
+                        "Info"
+                    );
+
+                    await notificacionesService.Crear(
+                        "100",
+                        "Pago pendiente por validar",
+                        $"El cliente {solicitud.Cliente!.NombreCompleto} subió un comprobante de pago para la solicitud #{solicitud.SolicitudId}.",
+                        "Warning"
+                    );
+                }
+                else if (metodoPago == "Efectivo")
+                {
+                    await notificacionesService.Crear(
+                        solicitud.ClienteId,
+                        "Pago en revisión",
+                        $"Has indicado pago en efectivo para la solicitud #{solicitud.SolicitudId}. El administrador deberá confirmarlo.",
+                        "Info"
+                    );
+
+                    await notificacionesService.Crear(
+                        "100",
+                        "Pago en efectivo pendiente",
+                        $"El cliente {solicitud.Cliente!.NombreCompleto} indicó pago en efectivo para la solicitud #{solicitud.SolicitudId}. Debe confirmarse.",
+                        "Info"
+                    );
+                }
+
+                solicitud.Estado = "Pago en Revisión";
+            }
+
+            await solicitudesService.Guardar(solicitud);
+
+            navigationManager.NavigateTo($"/cliente/ver-solicitud/{SolicitudId}");
         }
-        else
+        finally 
         {
-            solicitud.Estado = "Pago en Revisión";
+            guardando = false;
         }
-
-        await solicitudesService.Guardar(solicitud);
-
-        navigationManager.NavigateTo($"/cliente/ver-solicitud/{SolicitudId}");
     }
 }
