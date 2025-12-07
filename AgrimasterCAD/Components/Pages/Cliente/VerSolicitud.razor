@@ -8,11 +8,11 @@
 
 <PageTitle>Detalle de Solicitud</PageTitle>
 
-<div class="container">
+<div class="container py-5">
     <div class="card shadow-lg">
         <div class="card-header text-center">
             <h4 class="card-title fw-bold">
-                <i class="bi bi-file-text-fill me-2"></i> Detalles de la Solicitud #@SolicitudId
+                <i class="bi bi-file-text-fill"></i> Detalles de la Solicitud #@SolicitudId
             </h4>
         </div>
 
@@ -44,20 +44,20 @@
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Costo Final</label>
                         <input class="form-control"
-                            value="@(solicitud.CostoFinal?.ToString("C", new CultureInfo("es-DO")) ?? "Pendiente")"
+                            value="@(solicitud.CostoFinal?.ToString("C", new CultureInfo("es-DO")) ?? "Costo no calculado")"
                             disabled />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Fecha Aceptada</label>
                         <input class="form-control"
-                            value="@(solicitud.FechaAceptada?.ToString("dd/MM/yyyy") ?? "Pendiente")" disabled />
+                            value="@(solicitud.FechaAceptada?.ToString("dd/MM/yyyy") ?? "No aceptada aún")" disabled />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Fecha Finalizada</label>
                         <input class="form-control"
-                            value="@(solicitud.FechaFinalizada?.ToString("dd/MM/yyyy") ?? "Pendiente")" disabled />
+                            value="@(solicitud.FechaFinalizada?.ToString("dd/MM/yyyy") ?? "No finalizada")" disabled />
                     </div>
 
                     @if (solicitud.FechaCancelada != null)
@@ -107,7 +107,7 @@
                 }
                 else
                 {
-                    <span class="badge badge-secondary">Sin asignar</span>
+                    <span class="badge bg-secondary">Sin asignar</span>
                 }
 
                 <hr />
@@ -138,13 +138,12 @@
                 @if (solicitud.Plano != null)
                 {
                     <a href="@solicitud.Plano.RutaArchivo" class="btn btn-info" target="_blank">
-                        <i class="bi bi-file-earmark-richtext-fill me-1"></i>
-                        Ver Plano
+                        <i class="bi bi-file-earmark-richtext-fill"></i> Ver Plano
                     </a>
                 }
                 else
                 {
-                    <span class="badge badge-warning text-dark">No se ha subido el plano aún</span>
+                    <p class="text-muted">No se ha subido el plano aún.</p>
                 }
 
                 <hr />
@@ -155,7 +154,7 @@
                 {
                     <div class="card border-success shadow-sm mt-2" style="max-width:450px;">
                         <div class="card-header bg-success text-white text-center fw-bold">
-                            🧾 Comprobante de Pago
+                            <i class="bi bi-receipt"></i> Comprobante de Pago
                         </div>
 
                         <div class="card-body">
@@ -170,15 +169,15 @@
 
                             <hr />
 
-                            <p class="text-success text-center fw-bold mb-0">
-                                ✔ Pago procesado exitosamente
-                            </p>
+                            <div class="text-success text-center fw-bold">
+                                <i class="bi bi-check-lg"></i> Pago procesado exitosamente
+                            </div>
                         </div>
                     </div>
                 }
                 else
                 {
-                    <span class="badge badge-secondary">Aún no se ha emitido comprobante</span>
+                    <p class="text-muted">Aún no se ha emitido comprobante</p>
                 }
 
                 <hr />
@@ -256,14 +255,13 @@
                 {
                     <div class="text-center mt-3">
                         <a class="btn btn-success btn-lg" href="/cliente/pagar-solicitud/@solicitud.SolicitudId">
-                            <i class="bi bi-credit-card-fill me-2"></i>
-                            Pagar Ahora
+                            <i class="bi bi-credit-card-fill"></i> Pagar Ahora
                         </a>
                     </div>
                 }
                 else if (solicitud.Estado == "Pago en Revisión")
                 {
-                    <div class="alert alert-info text-center">
+                    <div class="alert alert-info">
                         El pago está en revisión por el agrimensor o el administrador.
                     </div>
                 }
