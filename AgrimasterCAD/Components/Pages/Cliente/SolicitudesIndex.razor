@@ -104,14 +104,17 @@
                                     <td>
                                         <a class="btn btn-primary btn-sm" href="/cliente/ver-solicitud/@solicitud.SolicitudId">Ver</a>
 
-                                        @if (solicitud.Estado == "Pendiente") 
-                                        {
-                                            <button type="button" class="btn btn-danger btn-sm">Eliminar</button>
-                                        } 
-                                        else if (solicitud.Estado == "Pago Pendiente") 
-                                        {
+                                            @if (solicitud.Estado == "Pendiente") 
+                                            {
+                                                <button type="button" class="btn btn-danger btn-sm"
+                                                        @onclick="() => PrepararEliminacion(solicitud)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            } 
+                                            else if (solicitud.Estado == "Pago Pendiente") 
+                                            {
                                             <a class="btn btn-success btn-sm" href="/cliente/pagar-solicitud/@solicitud.SolicitudId">Pagar</a>
-                                        }
+                                            }
                                     </td>
                                 </tr>
                             }
@@ -127,10 +130,47 @@
     </div>
 </div>
 
+@if (mostrandoModalEliminar && solicitudAEliminar != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Eliminar Solicitud</h5>
+                    <button type="button" class="btn-close" @onclick="CancelarEliminacion"></button>
+                </div>
+
+                <div class="modal-body">
+                    <p class="text-center">
+                        ¿Seguro que deseas eliminar la solicitud
+                        <strong>#@solicitudAEliminar.SolicitudId</strong>?
+                    </p>
+
+                    <p class="text-center text-muted">
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+
+                <div class="modal-footer d-flex justify-content-end">
+                    <button class="btn btn-secondary" @onclick="CancelarEliminacion">Cancelar</button>
+
+                    <button class="btn btn-danger" @onclick="ConfirmarEliminacion">
+                        <i class="bi bi-trash"></i> Eliminar
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     private string? userId;
 
     private List<Solicitudes> solicitudes = new();
+    private Solicitudes? solicitudAEliminar;
+    private bool mostrandoModalEliminar = false;
 
     private string textoBusqueda = "";
     private string filtroEstado = "";
@@ -162,6 +202,7 @@
         )
         .OrderByDescending(s => s.Fecha);
 
+
     protected override async Task OnInitializedAsync()
     {
         var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
@@ -177,6 +218,42 @@
 
         solicitudes = await solicitudesService.Listar(s => s.ClienteId == userId);
     }
+
+    private void PrepararEliminacion(Solicitudes solicitud)
+    {
+        solicitudAEliminar = solicitud;
+        mostrandoModalEliminar = true;
+    }
+
+    private void CancelarEliminacion()
+    {
+        solicitudAEliminar = null;
+        mostrandoModalEliminar = false;
+    }
+
+    private async Task ConfirmarEliminacion()
+    {
+        if (solicitudAEliminar == null)
+            return;
+
+        var eliminado = await solicitudesService.Eliminar(solicitudAEliminar.SolicitudId);
+
+        if (eliminado)
+        {
+            await notificacionesService.Crear(
+                userId!,
+                "Solicitud eliminada",
+                $"Has eliminado tu solicitud #{solicitudAEliminar.SolicitudId}.",
+                "Warning"
+            );
+
+            solicitudes.Remove(solicitudAEliminar);
+        }
+
+        solicitudAEliminar = null;
+        mostrandoModalEliminar = false;
+    }
+
 
     private void NormalizarRangoFechas()
     {
