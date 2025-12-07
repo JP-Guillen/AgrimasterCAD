@@ -1,0 +1,241 @@
+@page "/admin/editar-agrimensor/{Id}"
+@attribute [Authorize(Roles = "Administrador")]
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+@inject RoleManager<IdentityRole> RoleManager
+
+<PageTitle>Editar Agrimensor</PageTitle>
+
+@if (cargando)
+{
+    <div class="text-center my-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3">Cargando la información...</p>
+    </div>
+}
+else if (agrimensor is null)
+{
+    <div class="alert alert-danger">
+        No se encontró el agrimensor.
+    </div>
+}
+else
+{
+    <EditForm Model="agrimensor" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+
+        <div class="container py-5">
+            <div class="card shadow-lg">
+                <div class="card-header text-center">
+                    <h4 class="card-title fw-bold">Editar Agrimensor</h4>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <InputText class="form-control" @bind-Value="agrimensor!.NombreCompleto" />
+                        <ValidationMessage For="(() => agrimensor.NombreCompleto)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cédula</label>
+                        <InputText class="form-control" @bind-Value="agrimensor.NumeroCedula" />
+                        <ValidationMessage For="(() => agrimensor.NumeroCedula)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ciudad</label>
+                        <InputText class="form-control" @bind-Value="agrimensor.Ciudad" />
+                        <ValidationMessage For="(() => agrimensor.Ciudad)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <InputText class="form-control" @bind-Value="agrimensor.Direccion" />
+                        <ValidationMessage For="(() => agrimensor.Direccion)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Número CODIA</label>
+                        <InputText class="form-control" @bind-Value="agrimensor.NumeroCodia" />
+                        <ValidationMessage For="(() => agrimensor.NumeroCodia)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Correo electrónico</label>
+                        <InputText class="form-control" @bind-Value="agrimensor.Email" />
+                        <ValidationMessage For="(() => agrimensor.Email)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <InputText class="form-control" @bind-Value="agrimensor.PhoneNumber" />
+                        <ValidationMessage For="(() => agrimensor.PhoneNumber)" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMensaje))
+                    {
+                        <div class="alert alert-danger">@errorMensaje</div>
+                    }
+
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-center gap-2">
+                        <a href="/admin/agrimensores" class="btn btn-secondary">
+                            <span class="bi bi-arrow-left"></span> Volver
+                        </a>
+
+                        <button class="btn btn-success" type="submit" disabled="@(guardando)">
+                            <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private AgrimensorInputModel? agrimensor;
+    private ApplicationUser? usuarioDb;
+
+    private string? errorMensaje;
+    private bool cargando = true;
+    private bool guardando = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Id))
+        {
+            agrimensor = null;
+            cargando = false;
+            return;
+        }
+
+        usuarioDb = await UserManager.FindByIdAsync(Id);
+
+        if (usuarioDb != null)
+        {
+            agrimensor = new AgrimensorInputModel
+            {
+                NombreCompleto = usuarioDb.NombreCompleto,
+                NumeroCedula = usuarioDb.NumeroCedula,
+                Ciudad = usuarioDb.Ciudad,
+                Direccion = usuarioDb.Direccion,
+                NumeroCodia = usuarioDb.NumeroCodia!,
+                Email = usuarioDb.Email!,
+                PhoneNumber = usuarioDb.PhoneNumber!
+            };
+        }
+
+        cargando = false;
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        errorMensaje = string.Empty;
+
+        var cedulaExiste = await UserManager.Users
+            .AnyAsync(u => u.NumeroCedula == agrimensor!.NumeroCedula && u.Id != usuarioDb!.Id);
+
+        if (cedulaExiste)
+        {
+            errorMensaje = "Ya existe un agrimensor con la misma cédula.";
+            guardando = false;
+            return;
+        }
+
+        var codiaExiste = await UserManager.Users
+            .AnyAsync(u => u.NumeroCodia == agrimensor!.NumeroCodia && u.Id != usuarioDb!.Id);
+
+        if (codiaExiste)
+        {
+            errorMensaje = "El número CODIA ya está registrado.";
+            guardando = false;
+            return;
+        }
+
+        var emailExiste = await UserManager.Users
+            .AnyAsync(u => u.Email == agrimensor!.Email && u.Id != usuarioDb!.Id);
+
+        if (emailExiste)
+        {
+            errorMensaje = "El correo electrónico ya está en uso.";
+            guardando = false;
+            return;
+        }
+
+        try
+        {
+            usuarioDb!.NombreCompleto = agrimensor!.NombreCompleto;
+            usuarioDb.NumeroCedula = agrimensor.NumeroCedula;
+            usuarioDb.Ciudad = agrimensor.Ciudad;
+            usuarioDb.Direccion = agrimensor.Direccion;
+            usuarioDb.NumeroCodia = agrimensor.NumeroCodia;
+            usuarioDb.Email = agrimensor.Email;
+            usuarioDb.UserName = agrimensor.Email;
+            usuarioDb.PhoneNumber = agrimensor.PhoneNumber;
+
+            var result = await UserManager.UpdateAsync(usuarioDb);
+
+            if (result.Succeeded)
+            {
+                Navigation.NavigateTo("/admin/agrimensores");
+                return;
+            }
+
+            errorMensaje = string.Join(" | ", result.Errors.Select(e => e.Description));
+        }
+        catch (Exception ex)
+        {
+            errorMensaje = "Error inesperado: " + ex.Message;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    public class AgrimensorInputModel
+    {
+        [Required(ErrorMessage = "El campo Nombre Completo es obligatorio.")]
+        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,80}$", ErrorMessage = "El nombre solo puede contener letras y espacios.")]
+        [StringLength(150, ErrorMessage = "El nombre no puede superar los 150 caracteres.")]
+        public string NombreCompleto { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Cédula es obligatorio.")]
+        [RegularExpression(@"^\d{3}-\d{7}-\d{1}$", ErrorMessage = "El número de cédula debe tener el formato ###-#######-#.")]
+        public string NumeroCedula { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Ciudad es obligatorio.")]
+        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÑáéíóúñ ]+$", ErrorMessage = "La ciudad solo puede contener letras y espacios.")]
+        [StringLength(80, ErrorMessage = "La ciudad no puede superar los 80 caracteres.")]
+        public string Ciudad { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Dirección es obligatorio.")]
+        [RegularExpression(pattern: @"^[A-Za-z0-9ÁÉÍÓÚÑáéíóúñ #.,\-]+$", ErrorMessage = "La dirección contiene caracteres no válidos.")]
+        [StringLength(120, ErrorMessage = "La dirección no puede superar los 120 caracteres.")]
+        public string Direccion { get; set; } = "";
+
+        [Required(ErrorMessage = "El número CODIA es obligatorio.")]
+        [RegularExpression(@"^\d+$", ErrorMessage = "El número CODIA debe contener solo números.")]
+        [StringLength(10, ErrorMessage = "El número CODIA no puede superar los 10 dígitos.")]
+        public string NumeroCodia { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Teléfono es obligatorio.")]
+        [RegularExpression(@"^\+?[0-9\s\-()]{7,20}$", ErrorMessage = "El número de teléfono no es válido.")]
+        public string PhoneNumber { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
+        public string Email { get; set; } = "";
+    }
+}
