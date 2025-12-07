@@ -74,25 +74,16 @@
                 }
             </div>
 
-            <div class="card-footer text-center">
-                <a href="/admin/listado-agrimensores" class="btn btn-secondary me-2">
-                    <span class="bi bi-arrow-left me-2"></span> Volver
+            <div class="card-footer">
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="/admin/agrimensores" class="btn btn-secondary">
+                        <span class="bi bi-arrow-left"></span> Volver
                     </a>
 
-                <button class="btn btn-success"
-                        type="submit"
-                        disabled="@(isLoading || CamposIncompletos())">
-                    @if (isLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        <span>Guardando...</span>
-                    }
-                    else
-                    {
-                        <span class="bi bi-save me-2"></span>
-                        <span>Guardar</span>
-                    }
+                    <button class="btn btn-success" type="submit" disabled="@(guardando)">
+                        <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
                     </button>
+                </div>
             </div>
         </div>
     </div>
@@ -115,7 +106,7 @@
 
     private async Task Guardar()
     {
-        isLoading = true;
+        guardando = true;
         errorMensaje = string.Empty;
 
         try
@@ -137,7 +128,7 @@
             if (!result.Succeeded)
             {
                 errorMensaje = string.Join(" | ", result.Errors.Select(e => e.Description));
-                isLoading = false;
+                guardando = false;
                 return;
             }
 
@@ -151,8 +142,9 @@
         }
         finally
         {
-            isLoading = false;
+            guardando = false;
         }
+    }
 
     public class AgrimensorInputModel
     {
