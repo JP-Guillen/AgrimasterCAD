@@ -10,10 +10,11 @@
 
 <EditForm Model="solicitud" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
+
     <div class="container py-5">
         <div class="card shadow-lg">
             <div class="card-header text-center">
-                <h5 class="card-title fw-bold">Crear Solicitud</h5>
+                <h4 class="card-title fw-bold">Crear Solicitud</h4>
             </div>
 
             <div class="card-body">
@@ -57,14 +58,16 @@
                 }
             </div>
 
-            <div class="card-footer text-center">
-                <a href="/cliente/solicitudes" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Volver
-                </a>
+            <div class="card-footer">
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="/cliente/solicitudes" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
 
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-floppy"></i> Guardar
-                </button>
+                    <button type="submit" class="btn btn-success" disabled="@guardando">
+                        <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -77,6 +80,7 @@
 
     private string? userId;
     private string? errorMensaje;
+    private bool guardando = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -106,44 +110,53 @@
 
     private async Task Guardar()
     {
+        if (guardando) return;
+        guardando = true;
         errorMensaje = null;
-
-        if (archivoCedula == null || archivoConstancia == null)
-        {
-            errorMensaje = "Debe subir ambos documentos.";
-            return;
-        }
 
         try
         {
-            var rutaCedula = await solicitudesService.GuardarArchivo(archivoCedula, "cedulas");
-            var rutaConstancia = await solicitudesService.GuardarArchivo(archivoConstancia, "constancias");
-
-            solicitud.Documentos.Add(new SolicitudDocumentos
+            if (archivoCedula == null || archivoConstancia == null)
             {
-                Tipo = "Cedula",
-                RutaArchivo = rutaCedula
-            });
+                errorMensaje = "Debe subir ambos documentos.";
+                return;
+            }
 
-            solicitud.Documentos.Add(new SolicitudDocumentos
+            try
             {
-                Tipo = "Constancia Anotada",
-                RutaArchivo = rutaConstancia
-            });
-        }
-        catch (Exception ex)
-        {
-            errorMensaje = ex.Message;
-            return;
-        }
+                var rutaCedula = await solicitudesService.GuardarArchivo(archivoCedula, "cedulas");
+                var rutaConstancia = await solicitudesService.GuardarArchivo(archivoConstancia, "constancias");
 
-        if (await solicitudesService.Guardar(solicitud))
-        {
-            navigationManager.NavigateTo("/cliente/solicitudes");
+                solicitud.Documentos.Add(new SolicitudDocumentos
+                {
+                    Tipo = "Cedula",
+                    RutaArchivo = rutaCedula
+                });
+
+                solicitud.Documentos.Add(new SolicitudDocumentos
+                {
+                    Tipo = "Constancia Anotada",
+                    RutaArchivo = rutaConstancia
+                });
+            }
+            catch (Exception ex)
+            {
+                errorMensaje = ex.Message;
+                return;
+            }
+
+            if (await solicitudesService.Guardar(solicitud))
+            {
+                navigationManager.NavigateTo("/cliente/solicitudes");
+            }
+            else
+            {
+                errorMensaje = "Ocurrió un error guardando la solicitud.";
+            }
         }
-        else
+        finally
         {
-            errorMensaje = "Ocurrió un error guardando la solicitud.";
+            guardando = false;
         }
     }
 }
