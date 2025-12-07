@@ -106,8 +106,26 @@
             </div>
         </div>
 
-        <div class="card-footer text-muted">
-            <small>Total de agrimensores: @AgrimensoresFiltrados.Count()</small>
+        <div class="card-footer">
+            <small class="text-muted">Total de agrimensores: @agrimensoresFiltrados.Count()</small>
+
+            <nav class="mt-3">
+                <ul class="pagination justify-content-center">
+
+                    <li class="page-item @(paginaActual == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => CambiarPagina(paginaActual - 1)">Anterior</button>
+                    </li>
+
+                    <li class="page-item active">
+                        <button class="page-link">@paginaActual de @totalPaginas</button>
+                    </li>
+
+                    <li class="page-item @(paginaActual == totalPaginas ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => CambiarPagina(paginaActual + 1)">Siguiente</button>
+                    </li>
+
+                </ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -162,17 +180,54 @@
 
 @code {
     private List<ApplicationUser> agrimensores = new();
-    private string textoBusqueda = "";
-    private ApplicationUser? agrimensorAEliminar;
 
-    private IEnumerable<ApplicationUser> AgrimensoresFiltrados =>
-        agrimensores.Where(a =>
+    private string _textoBusqueda = "";
+    private string textoBusqueda
+    {
+        get => _textoBusqueda;
+        set { _textoBusqueda = value; paginaActual = 1; }
+    }
+
+    private string _filtroEstado = "Todos";
+    private string filtroEstado
+    {
+        get => _filtroEstado;
+        set
+        {
+            _filtroEstado = value; paginaActual = 1;
+        }
+    }
+
+    private ApplicationUser? usuarioAResetear;
+    private string? passwordGenerada;
+
+    private int paginaActual = 1;
+    private int tamanoPagina = 10;
+    private int totalPaginas => Math.Max(1, (int)Math.Ceiling((double)agrimensoresFiltrados.Count() / tamanoPagina));
+
+
+    private IEnumerable<ApplicationUser> agrimensoresFiltrados =>
+        agrimensores.Where(agrimensor =>
+            (
                 string.IsNullOrWhiteSpace(textoBusqueda) ||
-            (a.NombreCompleto?.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (a.NumeroCedula?.Contains(textoBusqueda) ?? false) ||
-            (a.Email?.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (a.NumeroCodia?.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false)
+                agrimensor.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                agrimensor.NumeroCedula.Contains(textoBusqueda) ||
+                agrimensor.Email!.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                agrimensor.PhoneNumber!.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                agrimensor.NumeroCodia!.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+            )
+            &&
+            (
+                filtroEstado == "Todos"
+                || (filtroEstado == "Activos" && !EstaDeshabilitado(agrimensor))
+                || (filtroEstado == "Deshabilitados" && EstaDeshabilitado(agrimensor))
+            )
         );
+
+    private IEnumerable<ApplicationUser> agrimensoresPaginados =>
+        agrimensoresFiltrados
+            .Skip((paginaActual - 1) * tamanoPagina)
+            .Take(tamanoPagina);
 
     protected override async Task OnInitializedAsync()
     {
@@ -192,9 +247,12 @@
         passwordGenerada = null;
     }
 
-    private void CancelarEliminacion()
+    private void CambiarPagina(int pagina)
     {
-        agrimensorAEliminar = null;
+        if (pagina < 1 || pagina > totalPaginas)
+            return;
+
+        paginaActual = pagina;
     }
 
     private async Task ResetearPassword()
