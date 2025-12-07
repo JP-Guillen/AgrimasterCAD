@@ -190,7 +190,8 @@
 
             && (string.IsNullOrEmpty(textoBusqueda)
                 || solicitud.SolicitudId.ToString().Contains(textoBusqueda)
-                || (solicitud.Agrimensor.NombreCompleto).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                || (solicitud.Agrimensor != null && 
+                        solicitud.Agrimensor.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
                 || (solicitud.Direccion).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
 
             && (string.IsNullOrEmpty(filtroProvincia)
