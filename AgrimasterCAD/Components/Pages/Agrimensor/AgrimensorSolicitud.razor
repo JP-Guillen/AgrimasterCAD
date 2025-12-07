@@ -276,6 +276,13 @@
             return;
         }
 
+        if (archivo.Size > 5 * 1024 * 1024)
+        {
+            errorPlano = "El plano no puede superar los 5 MB.";
+            archivoPlano = null;
+            return;
+        }
+
         errorPlano = null;
         archivoPlano = archivo;
     }
