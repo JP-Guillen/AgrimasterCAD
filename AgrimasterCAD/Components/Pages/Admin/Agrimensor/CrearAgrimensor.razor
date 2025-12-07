@@ -95,19 +95,8 @@
 
 @code {
     private AgrimensorInputModel agrimensor = new();
-    private ApplicationUser modelo = new();
-    private string password = string.Empty;
-    private string errorMensaje = string.Empty;
-    private bool isLoading = false;
-
-    private bool CamposIncompletos() =>
-        string.IsNullOrWhiteSpace(modelo.NombreCompleto) ||
-        string.IsNullOrWhiteSpace(modelo.NumeroCedula) ||
-        string.IsNullOrWhiteSpace(modelo.Ciudad) ||
-        string.IsNullOrWhiteSpace(modelo.Direccion) ||
-        string.IsNullOrWhiteSpace(modelo.Email) ||
-        string.IsNullOrWhiteSpace(modelo.PhoneNumber) ||
-        string.IsNullOrWhiteSpace(password);
+    private string? errorMensaje;
+    private bool guardando = false;
 
     private async Task Guardar()
     {
