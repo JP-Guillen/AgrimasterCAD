@@ -24,6 +24,7 @@
                         <option value="Asignado">Asignado</option>
                         <option value="En Proceso">En Proceso</option>
                         <option value="Pago Pendiente">Pago Pendiente</option>
+                        <option value="Pago en Revisión">Pago en Revisión</option>
                         <option value="Finalizado">Finalizado</option>
                         <option value="Cancelado">Cancelado</option>
                     </InputSelect>
@@ -100,25 +101,25 @@
                                     <th>@solicitud.Direccion</th>
                                     <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
                                     <td>
-                                        <a class="btn btn-primary btn-sm" href="/agrimensor/solicitud/@solicitud.SolicitudId">
+                                            <a class="btn btn-primary btn-sm" href="/agrimensor/solicitud/@solicitud.SolicitudId">
 
-                                            @if (solicitud.Estado == "En Proceso")
-                                            {
+                                                @if (solicitud.Estado == "En Proceso")
+                                                {
                                                 <span><i class="bi bi-pencil-square me-1"></i> Editar</span>
-                                            }
-                                            else
-                                            {
+                                                }
+                                                else
+                                                {
                                                 <span><i class="bi bi-eye-fill me-1"></i> Ver</span>
-                                            }
-                                        </a>
+                                                }
+                                            </a>
 
-                                        @if (solicitud.Estado == "Pendiente" || solicitud.Estado == "Asignado")
-                                        {                            
+                                            @if (solicitud.Estado == "Pendiente" || solicitud.Estado == "Asignado")
+                                            {                            
                                             <button class="btn btn-success btn-sm ms-1"
-                                                    @onclick="() => TomarSolicitud(solicitud)">
+                                                        @onclick="() => TomarSolicitud(solicitud)">
                                                 <i class="bi bi-hand-index-fill"></i> Tomar
-                                            </button>
-                                        }
+                                                </button>
+                                            }
                                     </td>
                                 </tr>
                             }
@@ -236,6 +237,7 @@
             "Asignado" => "badge badge-primary",
             "En Proceso" => "badge badge-warning text-dark",
             "Pago Pendiente" => "badge badge-info",
+            "Pago en Revisión" => "badge bg-warning text-dark",
             "Finalizado" => "badge badge-success",
             "Cancelado" => "badge badge-danger",
             _ => "badge bg-secondary"
