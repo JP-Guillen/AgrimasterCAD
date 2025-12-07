@@ -1,0 +1,212 @@
+@page "/admin/editar-cliente/{Id}"
+@attribute [Authorize(Roles = "Administrador")]
+@rendermode InteractiveServer
+
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Navigation
+
+<PageTitle>Editar Cliente</PageTitle>
+
+@if (cargando)
+{
+    <div class="text-center my-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3">Cargando la información...</p>
+    </div>
+}
+else if (cliente is null)
+{
+    <div class="alert alert-danger">
+        No se encontró el cliente.
+    </div>
+}
+else
+{
+    <EditForm Model="cliente" OnValidSubmit="Guardar">
+        <DataAnnotationsValidator />
+
+        <div class="container py-5">
+            <div class="card shadow-lg">
+                <div class="card-header text-center">
+                    <h4 class="card-title fw-bold">Editar Cliente</h4>
+                </div>
+
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <InputText class="form-control" @bind-Value="cliente.NombreCompleto" />
+                        <ValidationMessage For="(() => cliente.NombreCompleto)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cédula</label>
+                        <InputText class="form-control" @bind-Value="cliente.NumeroCedula" />
+                        <ValidationMessage For="(() => cliente.NumeroCedula)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Ciudad</label>
+                        <InputText class="form-control" @bind-Value="cliente.Ciudad" />
+                        <ValidationMessage For="(() => cliente.Ciudad)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <InputText class="form-control" @bind-Value="cliente.Direccion" />
+                        <ValidationMessage For="(() => cliente.Direccion)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Correo</label>
+                        <InputText class="form-control" @bind-Value="cliente.Email" />
+                        <ValidationMessage For="(() => cliente.Email)" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <InputText class="form-control" @bind-Value="cliente.PhoneNumber" />
+                        <ValidationMessage For="(() => cliente.PhoneNumber)" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorMensaje))
+                    {
+                        <div class="alert alert-danger">@errorMensaje</div>
+                    }
+
+                </div>
+
+                <div class="card-footer">
+                    <div class="d-flex justify-content-center gap-2">
+                            <a href="/admin/clientes" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Volver
+                        </a>
+
+                        <button class="btn btn-success" type="submit" disabled="@guardando">
+                            <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public string? Id { get; set; }
+
+    private ClienteInputModel? cliente;
+    private ApplicationUser? usuarioDb;
+
+    private string? errorMensaje;
+    private bool cargando = true;
+    private bool guardando = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Id))
+        {
+            cliente = null;
+            cargando = false;
+            return;
+        }
+
+        usuarioDb = await UserManager.FindByIdAsync(Id);
+
+        if (usuarioDb != null)
+        {
+            cliente = new ClienteInputModel
+            {
+                NombreCompleto = usuarioDb.NombreCompleto,
+                NumeroCedula = usuarioDb.NumeroCedula,
+                Ciudad = usuarioDb.Ciudad,
+                Direccion = usuarioDb.Direccion,
+                Email = usuarioDb.Email ?? "",
+                PhoneNumber = usuarioDb.PhoneNumber ?? ""
+            };
+        }
+
+        cargando = false;
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        errorMensaje = null;
+
+        var cedulaExiste = UserManager.Users
+            .Any(u => u.NumeroCedula == cliente!.NumeroCedula && u.Id != usuarioDb!.Id);
+
+        if (cedulaExiste)
+        {
+            errorMensaje = "Ya existe un cliente con la misma cédula.";
+            guardando = false;
+            return;
+        }
+
+        var emailExiste = UserManager.Users
+            .Any(u => u.Email == cliente!.Email && u.Id != usuarioDb!.Id);
+
+        if (emailExiste)
+        {
+            errorMensaje = "El correo ya está en uso.";
+            guardando = false;
+            return;
+        }
+
+        try
+        {
+            usuarioDb!.NombreCompleto = cliente!.NombreCompleto;
+            usuarioDb.NumeroCedula = cliente.NumeroCedula;
+            usuarioDb.Ciudad = cliente.Ciudad;
+            usuarioDb.Direccion = cliente.Direccion;
+            usuarioDb.Email = cliente.Email;
+            usuarioDb.UserName = cliente.Email;
+            usuarioDb.PhoneNumber = cliente.PhoneNumber;
+
+            var result = await UserManager.UpdateAsync(usuarioDb);
+
+            if (result.Succeeded)
+            {
+                Navigation.NavigateTo("/admin/clientes");
+                return;
+            }
+
+            errorMensaje = string.Join(" | ", result.Errors.Select(e => e.Description));
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    public class ClienteInputModel
+    {
+        [Required(ErrorMessage = "El campo Nombre Completo es obligatorio.")]
+        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÑáéíóúñ ]{2,80}$", ErrorMessage = "El nombre solo puede contener letras y espacios.")]
+        [StringLength(150, ErrorMessage = "El nombre no puede superar los 150 caracteres.")]
+        public string NombreCompleto { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Cédula es obligatorio.")]
+        [RegularExpression(@"^\d{3}-\d{7}-\d{1}$", ErrorMessage = "El número de cédula debe tener el formato ###-#######-#.")]
+        public string NumeroCedula { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Ciudad es obligatorio.")]
+        [RegularExpression(@"^[A-Za-zÁÉÍÓÚÑáéíóúñ ]+$", ErrorMessage = "La ciudad solo puede contener letras y espacios.")]
+        [StringLength(80, ErrorMessage = "La ciudad no puede superar los 80 caracteres.")]
+        public string Ciudad { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Dirección es obligatorio.")]
+        [RegularExpression(pattern: @"^[A-Za-z0-9ÁÉÍÓÚÑáéíóúñ #.,\-]+$", ErrorMessage = "La dirección contiene caracteres no válidos.")]
+        [StringLength(120, ErrorMessage = "La dirección no puede superar los 120 caracteres.")]
+        public string Direccion { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Teléfono es obligatorio.")]
+        [RegularExpression(@"^\+?[0-9\s\-()]{7,20}$", ErrorMessage = "El número de teléfono no es válido.")]
+        public string PhoneNumber { get; set; } = "";
+
+        [Required(ErrorMessage = "El campo Correo electrónico es obligatorio.")]
+        [EmailAddress(ErrorMessage = "El correo electrónico no es válido.")]
+        public string Email { get; set; } = "";
+    }
+}
