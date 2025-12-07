@@ -7,7 +7,7 @@
 @inject NotificacionesService notificacionesService
 @inject NavigationManager navigationManager
 
-<PageTitle>Solicitudes del Agrimensor</PageTitle>
+<PageTitle>Solicitudes</PageTitle>
 
 <div class="container">
     <div class="card shadow-lg">
@@ -102,25 +102,27 @@
                                     <th>@solicitud.Direccion</th>
                                     <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
                                     <td>
+                                        <div class="d-flex justify-content-center gap-2">
                                             <a class="btn btn-primary btn-sm" href="/agrimensor/solicitud/@solicitud.SolicitudId">
 
                                                 @if (solicitud.Estado == "En Proceso")
                                                 {
-                                                <span><i class="bi bi-pencil-square me-1"></i> Editar</span>
+                                                    <i class="bi bi-pencil-square"></i>
                                                 }
                                                 else
                                                 {
-                                                <span><i class="bi bi-eye-fill me-1"></i> Ver</span>
+                                                    <i class="bi bi-eye-fill"></i>
                                                 }
                                             </a>
 
                                             @if (solicitud.Estado == "Pendiente" || solicitud.Estado == "Asignado")
                                             {                            
-                                            <button class="btn btn-success btn-sm ms-1"
+                                                <button class="btn btn-success btn-sm"
                                                         @onclick="() => TomarSolicitud(solicitud)">
-                                                <i class="bi bi-hand-index-fill"></i> Tomar
+                                                    <i class="bi bi-hand-index-fill"></i>
                                                 </button>
                                             }
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -170,11 +172,8 @@
                 || (s.Municipio)
                     .Contains(filtroMunicipio, StringComparison.OrdinalIgnoreCase))
 
-            && (
-                    (mostrarSoloMios && s.AgrimensorId == userId)
-                    || 
-                    (!mostrarSoloMios && (s.AgrimensorId == null || s.Estado == "Pendiente"))
-                )
+            && ((mostrarSoloMios && s.AgrimensorId == userId)
+                || (!mostrarSoloMios && (s.AgrimensorId == null || s.Estado == "Pendiente")))
         )
         .OrderByDescending(s => s.Fecha);
 
