@@ -4,6 +4,7 @@
 
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject SolicitudesService solicitudesService
+@inject NotificacionesService notificacionesService
 @inject NavigationManager navigationManager
 
 <PageTitle>Solicitudes del Agrimensor</PageTitle>
@@ -216,6 +217,14 @@
         actual.FechaAceptada = DateTime.Now;
 
         await solicitudesService.Guardar(actual);
+
+        await notificacionesService.Crear(
+            actual.ClienteId,
+            "Solicitud aceptada",
+            $"El agrimensor ha comenzado a trabajar tu solicitud #{actual.SolicitudId}.",
+            "Info"
+        );
+
         solicitudes = await solicitudesService.Listar(s => s.SolicitudId > 0);
     }
 
