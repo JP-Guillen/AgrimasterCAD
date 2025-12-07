@@ -96,7 +96,7 @@
                                             @solicitud.Estado
                                         </span>
                                     </td>
-                                    <td>@solicitud.Cliente.NombreCompleto</td>
+                                    <td>@solicitud.Cliente!.NombreCompleto</td>
                                     <th>@solicitud.Provincia</th>
                                     <th>@solicitud.Municipio</th>
                                     <th>@solicitud.Direccion</th>
@@ -159,7 +159,7 @@
 
             && (string.IsNullOrEmpty(textoBusqueda)
                 || s.SolicitudId.ToString().Contains(textoBusqueda)
-                || (s.Cliente.NombreCompleto).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                || (s.Cliente!.NombreCompleto).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
                 || (s.Direccion).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
 
             && (string.IsNullOrEmpty(filtroProvincia)
@@ -198,7 +198,7 @@
     {
         var actual = await solicitudesService.Buscar(solicitud.SolicitudId);
 
-        if (actual.Estado != "Pendiente" && actual.Estado != "Asignado") 
+        if (actual!.Estado != "Pendiente" && actual.Estado != "Asignado") 
         {
             return;
         }
