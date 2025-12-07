@@ -7,14 +7,13 @@
 
 <PageTitle>Listado de Agrimensores</PageTitle>
 
-<div class="container">
+<div class="container py-5">
     <div class="card shadow-lg">
         <div class="card-header text-center">
-            <h5 class="card-title fw-bold">Listado de Agrimensores</h5>
+            <h4 class="card-title fw-bold">Listado de Agrimensores</h4>
         </div>
 
         <div class="card-body">
-
             <div class="d-flex justify-content-md-end mb-3">
                 <a href="/admin/crear-agrimensor" class="btn btn-primary">
                     <i class="bi bi-person-plus"></i> Crear Agrimensor
@@ -65,12 +64,12 @@
                                         <a class="btn btn-primary btn-sm me-1"
                                            href="/admin/editar-agrimensor/@ag.Id">
                                             Editar
-                                        </a>
+                                            </a>
 
                                         <button class="btn btn-danger btn-sm"
                                                 @onclick="() => PrepararEliminacion(ag)">
                                             Eliminar
-                                        </button>
+                                            </button>
                                     </td>
                                 </tr>
                             }
@@ -119,7 +118,7 @@
 
     private IEnumerable<ApplicationUser> AgrimensoresFiltrados =>
         agrimensores.Where(a =>
-            string.IsNullOrWhiteSpace(textoBusqueda) ||
+                string.IsNullOrWhiteSpace(textoBusqueda) ||
             (a.NombreCompleto?.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
             (a.NumeroCedula?.Contains(textoBusqueda) ?? false) ||
             (a.Email?.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
