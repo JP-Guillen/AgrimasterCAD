@@ -56,6 +56,38 @@
 
                 <hr />
 
+                <h5 class="fw-bold mb-3">Información del Cliente</h5>
+
+                <div class="row g-3 mb-3">
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Nombre Completo</label>
+                        <input class="form-control" value="@solicitud.Cliente!.NombreCompleto" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Cédula</label>
+                        <input class="form-control" value="@solicitud.Cliente!.NumeroCedula" disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <input class="form-control" value="@solicitud.Cliente!.PhoneNumber" disabled />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Email</label>
+                        <input class="form-control" value="@solicitud.Cliente!.Email" disabled />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <input class="form-control" value="@solicitud.Cliente!.Direccion" disabled />
+                    </div>
+                </div>
+
+                <hr />
+
                 <h5 class="fw-bold mb-3">Ubicación</h5>
 
                 <div class="row g-3 mb-3">
