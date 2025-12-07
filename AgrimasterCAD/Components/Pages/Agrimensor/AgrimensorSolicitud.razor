@@ -208,8 +208,8 @@
 
             @if (PuedeEditar)
             {
-                <button class="btn btn-success" @onclick="Guardar">
-                    <i class="bi bi-floppy"></i> Guardar
+                <button class="btn btn-success" @onclick="Guardar" disabled="@guardando">
+                    <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
                 </button>
             }
         </div>
@@ -221,6 +221,7 @@
 
     private Solicitudes? solicitud;
     private bool cargando = true;
+    private bool guardando = false;
 
     private decimal? costoFinal;
     private string? nuevoSeguimiento;
@@ -288,6 +289,11 @@
     }
 
     private async Task Guardar()
+    {
+        if (guardando) return;
+        guardando = true;
+
+        try
         {
             bool quiereSubirPlano = archivoPlano != null;
             bool quiereGuardarCosto = costoFinal.HasValue && costoFinal > 0;
@@ -332,5 +338,10 @@
             await solicitudesService.Guardar(solicitud!);
 
             navigationManager.NavigateTo($"/agrimensor/solicitud/{SolicitudId}", true);
+        }
+        finally
+        {
+            guardando = false;
+        }
     }
 }
