@@ -90,7 +90,7 @@
                         {
                             @foreach (var solicitud in solicitudes)
                             {
-                                <tr>
+                                <tr class="text-center">
                                     <td>@solicitud.SolicitudId</td>
                                     <td>
                                         <span class="@ObtenerClaseEstado(solicitud.Estado)">
@@ -103,7 +103,10 @@
                                     <td>@solicitud.Direccion</td>
                                     <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
                                     <td>
-                                        <a class="btn btn-primary btn-sm" href="/cliente/ver-solicitud/@solicitud.SolicitudId">Ver</a>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a class="btn btn-primary btn-sm" href="/cliente/ver-solicitud/@solicitud.SolicitudId">
+                                                <i class="bi bi-eye-fill"></i>
+                                            </a>
 
                                             @if (solicitud.Estado == "Pendiente") 
                                             {
@@ -114,8 +117,11 @@
                                             } 
                                             else if (solicitud.Estado == "Pago Pendiente") 
                                             {
-                                            <a class="btn btn-success btn-sm" href="/cliente/pagar-solicitud/@solicitud.SolicitudId">Pagar</a>
+                                                <a class="btn btn-success btn-sm" href="/cliente/pagar-solicitud/@solicitud.SolicitudId">
+                                                    <i class="bi bi-credit-card-fill"></i>
+                                                </a>
                                             }
+                                        </div>
                                     </td>
                                 </tr>
                             }
