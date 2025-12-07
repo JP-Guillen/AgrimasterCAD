@@ -40,6 +40,51 @@ public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactor
         }
     }
 
+    public async Task<bool> Eliminar(int solicitudId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        var solicitud = await contexto.Solicitudes
+            .Include(s => s.Documentos)
+            .Include(s => s.Plano)
+            .Include(s => s.ComprobantePago)
+            .Include(s => s.Pagos)
+            .Include(s => s.Seguimientos)
+            .FirstOrDefaultAsync(s => s.SolicitudId == solicitudId);
+
+        if (solicitud == null)
+            return false;
+
+        if (solicitud.Estado != "Pendiente")
+            throw new Exception("Solo se pueden eliminar solicitudes en estado 'Pendiente'.");
+
+        void EliminarArchivo(string? ruta)
+        {
+            if (string.IsNullOrWhiteSpace(ruta))
+                return;
+
+            var path = Path.Combine(env.WebRootPath, ruta.TrimStart('/'));
+            if (File.Exists(path))
+                File.Delete(path);
+        }
+
+        foreach (var doc in solicitud.Documentos)
+            EliminarArchivo(doc.RutaArchivo);
+
+        if (solicitud.Plano != null)
+            EliminarArchivo(solicitud.Plano.RutaArchivo);
+
+        if (solicitud.ComprobantePago != null)
+            EliminarArchivo(solicitud.ComprobantePago.Metodo);
+
+        foreach (var pago in solicitud.Pagos)
+            EliminarArchivo(pago.ReciboRuta);
+
+        contexto.Solicitudes.Remove(solicitud);
+
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
     public async Task<List<Solicitudes>> Listar(Expression<Func<Solicitudes, bool>> criterio)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
@@ -73,21 +118,17 @@ public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactor
     {
         try
         {
-            // Carpeta destino: wwwroot/uploads/{subcarpeta}
             var carpeta = Path.Combine(env.WebRootPath, "uploads", subcarpeta);
 
             if (!Directory.Exists(carpeta))
                 Directory.CreateDirectory(carpeta);
 
-            // Nombre único
             var archivoNombre = $"{Guid.NewGuid()}_{archivo.Name}";
             var rutaArchivo = Path.Combine(carpeta, archivoNombre);
 
-            // Guardar archivo
             await using var stream = new FileStream(rutaArchivo, FileMode.Create);
             await archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).CopyToAsync(stream);
 
-            // Devolver ruta relativa (para la DB)
             return $"/uploads/{subcarpeta}/{archivoNombre}";
         }
         catch (IOException)
