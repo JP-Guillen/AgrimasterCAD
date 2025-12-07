@@ -8,7 +8,7 @@
 
 <PageTitle>Crear Agrimensor</PageTitle>
 
-<EditForm Model="modelo" OnValidSubmit="Guardar">
+<EditForm Model="agrimensor" OnValidSubmit="Guardar">
     <DataAnnotationsValidator />
 
     <div class="container mt-4">
@@ -19,58 +19,62 @@
 
             <div class="card-body">
                 <div class="mb-3">
-                    <label class="form-label"><strong>Nombre Completo</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.NombreCompleto" />
-                    <ValidationMessage For="(() => modelo.NombreCompleto)" />
+                    <label class="form-label fw-bold">Nombre Completo</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.NombreCompleto" />
+                    <ValidationMessage For="(() => agrimensor.NombreCompleto)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Cédula</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.NumeroCedula" />
-                    <ValidationMessage For="(() => modelo.NumeroCedula)" />
+                    <label class="form-label fw-bold">Cédula</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.NumeroCedula" />
+                    <ValidationMessage For="(() => agrimensor.NumeroCedula)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Ciudad</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.Ciudad" />
-                    <ValidationMessage For="(() => modelo.Ciudad)" />
+                    <label class="form-label fw-bold">Ciudad</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.Ciudad" />
+                    <ValidationMessage For="(() => agrimensor.Ciudad)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Dirección</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.Direccion" />
-                    <ValidationMessage For="(() => modelo.Direccion)" />
+                    <label class="form-label fw-bold">Dirección</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.Direccion" />
+                    <ValidationMessage For="(() => agrimensor.Direccion)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Número CODIA</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.NumeroCodia" />
-                    <ValidationMessage For="(() => modelo.NumeroCodia)" />
+                    <label class="form-label fw-bold">Número CODIA</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.NumeroCodia" />
+                    <ValidationMessage For="(() => agrimensor.NumeroCodia)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Correo</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.Email" />
-                    <ValidationMessage For="(() => modelo.Email)" />
+                    <label class="form-label fw-bold">Correo electrónico</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.Email" />
+                    <ValidationMessage For="(() => agrimensor.Email)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Teléfono</strong></label>
-                    <InputText class="form-control" @bind-Value="modelo.PhoneNumber" />
-                    <ValidationMessage For="(() => modelo.PhoneNumber)" />
+                    <label class="form-label fw-bold">Teléfono</label>
+                    <InputText class="form-control" @bind-Value="agrimensor.PhoneNumber" />
+                    <ValidationMessage For="(() => agrimensor.PhoneNumber)" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label"><strong>Contraseña</strong></label>
-                    <InputText type="password" class="form-control" @bind-Value="password" />
-                    <ValidationMessage For="(() => password)" />
+                    <label class="form-label fw-bold">Contraseña</label>
+                    <InputText type="password" class="form-control" @bind-Value="agrimensor.Password" />
+                    <ValidationMessage For="(() => agrimensor.Password)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Confirmar Contraseña</label>
+                    <InputText type="password" class="form-control" @bind-Value="agrimensor.ConfirmPassword" />
+                    <ValidationMessage For="(() => agrimensor.ConfirmPassword)" />
                 </div>
 
                 @if (!string.IsNullOrEmpty(errorMensaje))
                 {
-                    <div class="alert alert-danger">
-                        @errorMensaje
-                    </div>
+                    <div class="alert alert-danger">@errorMensaje</div>
                 }
             </div>
 
@@ -90,6 +94,7 @@
 </EditForm>
 
 @code {
+    private AgrimensorInputModel agrimensor = new();
     private ApplicationUser modelo = new();
     private string password = string.Empty;
     private string errorMensaje = string.Empty;
@@ -113,17 +118,17 @@
         {
             var usuario = new ApplicationUser
             {
-                UserName = modelo.Email,
-                PhoneNumber = modelo.PhoneNumber,
-                Email = modelo.Email,
-                NombreCompleto = modelo.NombreCompleto,
-                NumeroCedula = modelo.NumeroCedula,
-                Ciudad = modelo.Ciudad,
-                Direccion = modelo.Direccion,
-                NumeroCodia = modelo.NumeroCodia,
+                NombreCompleto = agrimensor.NombreCompleto,
+                NumeroCedula = agrimensor.NumeroCedula,
+                Ciudad = agrimensor.Ciudad,
+                Direccion = agrimensor.Direccion,
+                PhoneNumber = agrimensor.PhoneNumber,
+                Email = agrimensor.Email,
+                UserName = agrimensor.Email,
+                NumeroCodia = agrimensor.NumeroCodia,
             };
 
-            var result = await UserManager.CreateAsync(usuario, password);
+            var result = await UserManager.CreateAsync(usuario, agrimensor.Password);
 
             if (!result.Succeeded)
             {
