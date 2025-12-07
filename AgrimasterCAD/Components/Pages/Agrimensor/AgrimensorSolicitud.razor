@@ -30,7 +30,7 @@
                 @if (!PuedeEditar)
                 {
                     <div class="alert alert-info text-center fw-bold">
-                        🔒 Esta solicitud no puede editarse en su estado actual: <b>@solicitud.Estado</b>.
+                        🔒 Esta solicitud no puede editarse en su estado actual: <b>@solicitud!.Estado</b>.
                     </div>
                 }
 
@@ -40,12 +40,12 @@
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Estado</label>
-                        <input class="form-control" value="@solicitud.Estado" disabled />
+                        <input class="form-control" value="@solicitud!.Estado" disabled />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold">Cliente</label>
-                        <input class="form-control" value="@solicitud.Cliente.NombreCompleto" disabled />
+                        <input class="form-control" value="@solicitud.Cliente!.NombreCompleto" disabled />
                     </div>
 
                     <div class="col-md-4">
@@ -220,7 +220,7 @@
             return;
         }
 
-        bool puedeVer = solicitud.Estado == "Pendiente" || solicitud.AgrimensorId == userId; 
+        bool puedeVer = solicitud.Estado == "Pendiente" || solicitud.AgrimensorId == userId;
 
         if (!puedeVer)
         {
@@ -249,48 +249,49 @@
     }
 
     private async Task Guardar()
-    {
-        bool quiereSubirPlano = archivoPlano != null;
-        bool quiereGuardarCosto = costoFinal.HasValue && costoFinal > 0;
-
-        if (quiereSubirPlano && !quiereGuardarCosto)
         {
-            errorPlano = "Debe ingresar el costo final para guardar el plano.";
-            return;
-        }
+            bool quiereSubirPlano = archivoPlano != null;
+            bool quiereGuardarCosto = costoFinal.HasValue && costoFinal > 0;
 
-        if (quiereGuardarCosto && !quiereSubirPlano && solicitud.Plano == null)
-        {
-            errorCosto = "Debe subir el plano para guardar el costo final.";
-            return;
-        }
+            if (quiereSubirPlano && !quiereGuardarCosto)
+            {
+                errorPlano = "Debe ingresar el costo final para guardar el plano.";
+                return;
+            }
 
-        errorPlano = null;
-        errorCosto = null;
+            if (quiereGuardarCosto && !quiereSubirPlano && solicitud!.Plano == null)
+            {
+                errorCosto = "Debe subir el plano para guardar el costo final.";
+                return;
+            }
 
-        if (!string.IsNullOrWhiteSpace(nuevoSeguimiento))
-        {
-            await solicitudesService.AgregarSeguimiento(SolicitudId, nuevoSeguimiento);
-            nuevoSeguimiento = "";
-        }
+            errorPlano = null;
+            errorCosto = null;
 
-        if (quiereSubirPlano)
-        {
-            await solicitudesService.GuardarPlano(SolicitudId, archivoPlano);
-        }
+            if (!string.IsNullOrWhiteSpace(nuevoSeguimiento))
+            {
+                await solicitudesService.AgregarSeguimiento(SolicitudId, nuevoSeguimiento);
+                nuevoSeguimiento = "";
+            }
 
-        if (quiereGuardarCosto)
-        {
-            solicitud.CostoFinal = costoFinal.Value;
-        }
+            if (quiereSubirPlano)
+            {
+                await solicitudesService.GuardarPlano(SolicitudId, archivoPlano!);
+            }
 
-        if (quiereSubirPlano && quiereGuardarCosto)
-        {
+            if (quiereGuardarCosto)
+            {
+                solicitud!.CostoFinal = costoFinal!.Value;
+            }
+
+            if (quiereSubirPlano && quiereGuardarCosto)
+            {
+                solicitud!.Estado = "Pago Pendiente";
             solicitud.Estado = "Pago Pendiente";
-        }
+            }
 
-        await solicitudesService.Guardar(solicitud);
+            await solicitudesService.Guardar(solicitud!);
 
-        navigationManager.NavigateTo($"/agrimensor/solicitud/{SolicitudId}", true);
+            navigationManager.NavigateTo($"/agrimensor/solicitud/{SolicitudId}", true);
     }
 }
