@@ -3,6 +3,7 @@
 @rendermode InteractiveServer
 
 @inject SolicitudesService solicitudesService
+@inject NotificacionesService notificacionesService
 @inject AuthenticationStateProvider authenticationStateProvider
 @inject NavigationManager navigationManager
 
@@ -316,6 +317,14 @@
             if (!string.IsNullOrWhiteSpace(nuevoSeguimiento))
             {
                 await solicitudesService.AgregarSeguimiento(SolicitudId, nuevoSeguimiento);
+
+                await notificacionesService.Crear(
+                    solicitud!.ClienteId,
+                    "Nuevo seguimiento",
+                    $"Se agregó una actualización a tu solicitud #{solicitud.SolicitudId}.",
+                    "Info"
+                );
+
                 nuevoSeguimiento = "";
             }
 
@@ -332,7 +341,13 @@
             if (quiereSubirPlano && quiereGuardarCosto)
             {
                 solicitud!.Estado = "Pago Pendiente";
-            solicitud.Estado = "Pago Pendiente";
+
+                await notificacionesService.Crear(
+                    solicitud.ClienteId,
+                    "Plano y costo final disponibles",
+                    $"Tu solicitud #{solicitud.SolicitudId} ya tiene plano y costo final. Puedes proceder al pago.",
+                    "Success"
+                );
             }
 
             await solicitudesService.Guardar(solicitud!);
