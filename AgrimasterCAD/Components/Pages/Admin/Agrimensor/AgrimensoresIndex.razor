@@ -44,34 +44,48 @@
                             <th>Nombre</th>
                             <th>Cédula</th>
                             <th>Ciudad</th>
+                            <th>Dirección</th>
                             <th>Correo</th>
+                            <th>Teléfono</th>
                             <th>CODIA</th>
+                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        @if (!AgrimensoresFiltrados.Any())
+                        @if (!agrimensoresFiltrados.Any())
                         {
                             <tr>
-                                <td colspan="6" class="text-center">No hay agrimensores registrados.</td>
+                                <td colspan="9" class="text-center">No hay agrimensores registrados.</td>
                             </tr>
                         }
                         else
                         {
-                            @foreach (var ag in AgrimensoresFiltrados)
+                            @foreach (var agrimensor in agrimensoresPaginados)
                             {
-                                <tr>
-                                    <td>@ag.NombreCompleto</td>
-                                    <td>@ag.NumeroCedula</td>
-                                    <td>@ag.Ciudad</td>
-                                    <td>@ag.Email</td>
-                                    <td>@(ag.NumeroCodia ?? "N/A")</td>
-
-                                    <td class="text-center">
-                                        <a class="btn btn-primary btn-sm me-1"
-                                           href="/admin/editar-agrimensor/@ag.Id">
-                                            Editar
+                                <tr class="text-center">
+                                    <td>@agrimensor.NombreCompleto</td>
+                                    <td>@agrimensor.NumeroCedula</td>
+                                    <td>@agrimensor.Ciudad</td>
+                                    <td>@agrimensor.Direccion</td>
+                                    <td>@agrimensor.Email</td>
+                                    <td>@agrimensor.PhoneNumber</td>
+                                    <td>@(agrimensor.NumeroCodia)</td>
+                                    <td>
+                                        @if (EstaDeshabilitado(agrimensor))
+                                        {
+                                            <span class="badge bg-danger">Deshabilitado</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            <a class="btn btn-primary btn-sm" href="/admin/editar-agrimensor/@agrimensor.Id">
+                                                <i class="bi bi-pencil-square"></i>
                                             </a>
 
                                         <button class="btn btn-danger btn-sm"
