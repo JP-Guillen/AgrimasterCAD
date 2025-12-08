@@ -351,13 +351,13 @@
     {
         return estado switch
         {
-            "Pendiente" => "badge badge-secondary",
-            "Asignado" => "badge badge-primary",
-            "En Proceso" => "badge badge-warning text-dark",
-            "Pago Pendiente" => "badge badge-info",
+            "Pendiente" => "badge bg-secondary",
+            "Asignado" => "badge bg-primary",
+            "En Proceso" => "badge bg-warning text-dark",
+            "Pago Pendiente" => "badge bg-info",
             "Pago en Revisión" => "badge bg-warning text-dark",
-            "Finalizado" => "badge badge-success",
-            "Cancelado" => "badge badge-danger",
+            "Finalizado" => "badge bg-success",
+            "Cancelado" => "badge bg-danger",
             _ => "badge bg-secondary"
         };
     }
