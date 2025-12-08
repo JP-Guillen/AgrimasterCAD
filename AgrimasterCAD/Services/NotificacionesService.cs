@@ -23,6 +23,19 @@ public class NotificacionesService(IDbContextFactory<ApplicationDbContext> DbFac
         await contexto.SaveChangesAsync();
     }
 
+
+    public async Task EliminarTodas(string userId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        var lista = await contexto.Notificaciones
+            .Where(n => n.UsuarioId == userId)
+            .ToListAsync();
+
+        contexto.Notificaciones.RemoveRange(lista);
+        await contexto.SaveChangesAsync();
+    }
+
     public async Task<List<Notificaciones>> Listar(string usuarioId)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
