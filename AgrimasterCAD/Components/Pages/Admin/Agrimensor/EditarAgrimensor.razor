@@ -144,30 +144,42 @@ else
         guardando = true;
         errorMensaje = string.Empty;
 
-        var cedulaExiste = await UserManager.Users
-            .AnyAsync(u => u.NumeroCedula == agrimensor!.NumeroCedula && u.Id != usuarioDb!.Id);
+        var cedulaExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NumeroCedula == agrimensor!.NumeroCedula);
 
-        if (cedulaExiste)
+        if (cedulaExistente != null && cedulaExistente.Id != usuarioDb!.Id)
         {
             errorMensaje = "Ya existe un agrimensor con la misma cédula.";
             guardando = false;
             return;
         }
 
-        var codiaExiste = await UserManager.Users
-            .AnyAsync(u => u.NumeroCodia == agrimensor!.NumeroCodia && u.Id != usuarioDb!.Id);
+        var codiaExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NumeroCodia == agrimensor!.NumeroCodia);
 
-        if (codiaExiste)
+        if (codiaExistente != null && codiaExistente.Id != usuarioDb!.Id)
         {
             errorMensaje = "El número CODIA ya está registrado.";
             guardando = false;
             return;
         }
 
-        var emailExiste = await UserManager.Users
-            .AnyAsync(u => u.Email == agrimensor!.Email && u.Id != usuarioDb!.Id);
+        var telefonoExistente = await UserManager.Users
+                .FirstOrDefaultAsync(u => u.PhoneNumber == agrimensor!.PhoneNumber);
 
-        if (emailExiste)
+            if (telefonoExistente != null && telefonoExistente.Id != usuarioDb!.Id)
+            {
+                errorMensaje = "El número de teléfono ya está en uso.";
+                guardando = false;
+                return;
+            }
+
+        var emailNormalizado = agrimensor!.Email.Trim().ToUpper();
+
+        var emailExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == emailNormalizado);
+
+        if (emailExistente != null && emailExistente.Id != usuarioDb!.Id)
         {
             errorMensaje = "El correo electrónico ya está en uso.";
             guardando = false;
