@@ -46,7 +46,8 @@
 
                             <li>
                                 <form action="/Account/Logout" method="post">
-                                    <input type="hidden" name="ReturnUrl" value="@Nav.Uri" />
+                                    <AntiforgeryToken />
+                                    <input type="hidden" name="ReturnUrl" value="" />
                                     <button style="background:none;border:none;color:var(--nav-color);padding:18px 15px;">
                                         Cerrar Sesión
                                     </button>
