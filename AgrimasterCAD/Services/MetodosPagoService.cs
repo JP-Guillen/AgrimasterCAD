@@ -38,6 +38,20 @@ public class MetodosPagoService(IDbContextFactory<ApplicationDbContext> DbFactor
         }
     }
 
+    public async Task<bool> Eliminar(int metodoPagoId, string usuarioId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        var metodo = await contexto.MetodosPago
+            .FirstOrDefaultAsync(m => m.MetodoPagoId == metodoPagoId && m.UsuarioId == usuarioId);
+
+        if (metodo is null)
+            return false;
+
+        contexto.MetodosPago.Remove(metodo);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
     public async Task<List<MetodosPago>> ListarPorUsuario(string usuarioId)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
