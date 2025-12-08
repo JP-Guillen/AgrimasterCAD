@@ -208,7 +208,7 @@
                 {
                     <table class="table table-bordered">
                         <thead class="table-light">
-                            <tr>
+                            <tr class="text-center">
                                 <th>Fecha</th>
                                 <th>Método</th>
                                 <th>Monto</th>
@@ -219,7 +219,7 @@
                         <tbody>
                             @foreach (var pago in solicitud.Pagos.OrderByDescending(p => p.Fecha))
                             {
-                                <tr>
+                                <tr class="text-center">
                                     <td>@pago.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
                                     <td>@pago.Metodo</td>
                                     <td>@pago.Monto.ToString("C", new CultureInfo("es-DO"))</td>
