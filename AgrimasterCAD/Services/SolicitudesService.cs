@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AgrimasterCAD.Services;
 
-public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactory, IWebHostEnvironment env)
+public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactory, IWebHostEnvironment env, R2StorageService storage)
 {
     private async Task<bool> Existe(int solicitudId)
     {
@@ -128,28 +128,30 @@ public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactor
         .FirstOrDefaultAsync(s => s.SolicitudId == solicitudId);
     }
 
+    private async Task<string?> GuardarEnR2(IBrowserFile archivo, string folder)
+    {
+        using var ms = new MemoryStream();
+        await archivo.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
+
+        var bytes = ms.ToArray();
+        var ext = Path.GetExtension(archivo.Name);
+        var nombre = $"{Guid.NewGuid()}{ext}";
+        var key = $"{folder}/{nombre}";
+
+        var url = await storage.UploadFileAsync(bytes, key);
+
+        if (url == null)
+            throw new Exception($"No se pudo subir archivo a R2: {storage.LastR2Error}");
+
+        return url;
+    }
+
     public async Task<string> GuardarArchivo(IBrowserFile archivo, string subcarpeta)
     {
-        try
-        {
-            var carpeta = Path.Combine(env.WebRootPath, "uploads", subcarpeta);
-
-            if (!Directory.Exists(carpeta))
-                Directory.CreateDirectory(carpeta);
-
-            var archivoNombre = $"{Guid.NewGuid()}_{archivo.Name}";
-            var rutaArchivo = Path.Combine(carpeta, archivoNombre);
-
-            await using var stream = new FileStream(rutaArchivo, FileMode.Create);
-            await archivo.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).CopyToAsync(stream);
-
-            return $"/uploads/{subcarpeta}/{archivoNombre}";
-        }
-        catch (IOException)
-        {
-            throw new Exception("El archivo supera el límite de 5 MB.");
-        }
+        var url = await GuardarEnR2(archivo, subcarpeta);
+        return url!;
     }
+
 
     public async Task<string> GuardarPlano(int solicitudId, IBrowserFile archivo)
     {

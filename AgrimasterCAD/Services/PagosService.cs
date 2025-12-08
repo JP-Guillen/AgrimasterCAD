@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace AgrimasterCAD.Services;
 
-public class PagosService(IDbContextFactory<ApplicationDbContext> DbFactory, IWebHostEnvironment env)
+public class PagosService(IDbContextFactory<ApplicationDbContext> DbFactory, R2StorageService storage)
 {
     private async Task<bool> Existe(int pagoId)
     {
@@ -42,25 +42,15 @@ public class PagosService(IDbContextFactory<ApplicationDbContext> DbFactory, IWe
 
     public async Task<string?> GuardarComprobante(IBrowserFile archivo, int solicitudId)
     {
-        try
-        {
-            var carpeta = Path.Combine(env.WebRootPath, "uploads", "comprobantes");
+        var nombre = $"{solicitudId}_{Guid.NewGuid()}.pdf";
+        var key = $"comprobantes/{nombre}";
 
-            if (!Directory.Exists(carpeta))
-                Directory.CreateDirectory(carpeta);
+        using var ms = new MemoryStream();
+        await archivo.OpenReadStream(5 * 1024 * 1024).CopyToAsync(ms);
 
-            var archivoNombre = $"{solicitudId}_{Guid.NewGuid()}.pdf";
-            var ruta = Path.Combine(carpeta, archivoNombre);
+        var url = await storage.UploadFileAsync(ms.ToArray(), key);
 
-            using var stream = new FileStream(ruta, FileMode.Create);
-            await archivo.OpenReadStream(5 * 1024 * 1024).CopyToAsync(stream);
-
-            return $"/uploads/comprobantes/{archivoNombre}";
-        }
-        catch
-        {
-            return null;
-        }
+        return url;
     }
 
     public async Task<List<Pagos>> Listar(Expression<Func<Pagos, bool>> criterio)

@@ -44,6 +44,8 @@ builder.Services.AddScoped<ComprobantesPagoService>();
 builder.Services.AddScoped<NotificacionesService>();
 builder.Services.AddScoped<MetodosPagoService>();
 
+builder.Services.AddSingleton<R2StorageService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
