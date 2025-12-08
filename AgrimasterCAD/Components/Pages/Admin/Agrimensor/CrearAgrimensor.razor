@@ -104,6 +104,48 @@
         guardando = true;
         errorMensaje = string.Empty;
 
+        var cedulaExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NumeroCedula == agrimensor!.NumeroCedula);
+
+        if (cedulaExistente != null)
+        {
+            errorMensaje = "Ya existe un agrimensor con la misma cédula.";
+            guardando = false;
+            return;
+        }
+
+        var codiaExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NumeroCodia == agrimensor!.NumeroCodia);
+
+        if (codiaExistente != null)
+        {
+            errorMensaje = "El número CODIA ya está registrado.";
+            guardando = false;
+            return;
+        }
+
+        var telefonoExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.PhoneNumber == agrimensor.PhoneNumber);
+
+        if (telefonoExistente != null)
+        {
+            errorMensaje = "El número de teléfono ya está en uso.";
+            guardando = false;
+            return;
+        }
+
+        var emailNormalizado = agrimensor!.Email.Trim().ToUpper();
+
+        var emailExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == emailNormalizado);
+
+        if (emailExistente != null)
+        {
+            errorMensaje = "El correo electrónico ya está en uso.";
+            guardando = false;
+            return;
+        }
+
         try
         {
             var usuario = new ApplicationUser
