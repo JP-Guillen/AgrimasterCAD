@@ -1,17 +1,27 @@
 ﻿@inherits LayoutComponentBase
-@layout AgrimasterCAD.Components.Layout.MainLayout
 
-<h1>Manage your account</h1>
+<link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/main.css" />
 
-<div>
-    <h2>Change your account settings</h2>
-    <hr />
-    <div class="row">
-        <div class="col-lg-3">
-            <ManageNavMenu />
-        </div>
-        <div class="col-lg-9">
-            @Body
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700;900&family=Open+Sans:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+<NavbarInterno />
+
+<main class="main" style="min-height:80vh;">
+    <div class="container py-4">
+        <div class="row">
+            <div class="col-lg-3">
+                <ManageNavMenu />
+            </div>
+
+            <div class="col-lg-9">
+                @Body
+            </div>
         </div>
     </div>
-</div>
+</main>
+
+<FooterInterno />
