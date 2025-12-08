@@ -1,4 +1,5 @@
 ﻿@page "/Account/Manage"
+@layout ManageLayout
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Identity
@@ -8,9 +9,8 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IdentityRedirectManager RedirectManager
 
-<PageTitle>Profile</PageTitle>
+<PageTitle>Perfil</PageTitle>
 
-<h3>Profile</h3>
 <StatusMessage />
 
 <div class="row">
@@ -18,46 +18,85 @@
         <EditForm Model="Input" FormName="profile" OnValidSubmit="OnValidSubmitAsync" method="post">
             <DataAnnotationsValidator />
             <ValidationSummary class="text-danger" role="alert" />
+
+            <h3>Perfil</h3>
+
             <div class="form-floating mb-3">
-                <input type="text" value="@username" id="username" class="form-control" placeholder="Choose your username." disabled />
-                <label for="username" class="form-label">Username</label>
+                <InputText @bind-Value="Input.NombreCompleto" class="form-control" id="NombreCompleto" disabled />
+                <label for="NombreCompleto">Nombre completo</label>
+                <ValidationMessage For="() => Input.NombreCompleto" class="text-danger" />
             </div>
+
             <div class="form-floating mb-3">
-                <InputText @bind-Value="Input.PhoneNumber" id="Input.PhoneNumber" class="form-control" placeholder="Enter your phone number" />
-                <label for="Input.PhoneNumber" class="form-label">Phone number</label>
+                <InputText @bind-Value="Input.Email" class="form-control" id="Email" disabled />
+                <label for="Email">Correo electrónico</label>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.NumeroCedula" class="form-control" id="NumeroCedula" disabled />
+                <label for="NumeroCedula">Número de cédula</label>
+            </div>
+
+            @if (esAgrimensor)
+            {
+                <div class="form-floating mb-3">
+                    <InputText @bind-Value="Input.NumeroCodia" class="form-control" id="NumeroCodia" disabled />
+                    <label for="NumeroCodia">Número CODIA</label>
+                </div>
+            }
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Ciudad" class="form-control" id="Ciudad" disabled />
+                <label for="Ciudad">Ciudad</label>
+                <ValidationMessage For="() => Input.Ciudad" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Direccion" class="form-control" id="Direccion" disabled />
+                <label for="Direccion">Dirección</label>
+                <ValidationMessage For="() => Input.Direccion" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.PhoneNumber" class="form-control" id="PhoneNumber" disabled />
+                <label for="PhoneNumber">Número de teléfono</label>
                 <ValidationMessage For="() => Input.PhoneNumber" class="text-danger" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
         </EditForm>
     </div>
 </div>
 
 @code {
     private ApplicationUser? user;
-    private string? username;
-    private string? phoneNumber;
+    private bool esAgrimensor = false;
+    private InputModel Input { get; set; } = new();
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = default!;
 
-    [SupplyParameterFromForm]
-    private InputModel Input { get; set; } = default!;
-
     protected override async Task OnInitializedAsync()
     {
-        Input ??= new();
-
         user = await UserManager.GetUserAsync(HttpContext.User);
+
         if (user is null)
         {
             RedirectManager.RedirectToInvalidUser(UserManager, HttpContext);
             return;
         }
 
-        username = await UserManager.GetUserNameAsync(user);
-        phoneNumber = await UserManager.GetPhoneNumberAsync(user);
+        esAgrimensor = await UserManager.IsInRoleAsync(user, "Agrimensor");
 
-        Input.PhoneNumber ??= phoneNumber;
+        Input = new InputModel
+        {
+            NombreCompleto = user.NombreCompleto,
+            NumeroCedula = user.NumeroCedula,
+            Ciudad = user.Ciudad,
+            Direccion = user.Direccion,
+            PhoneNumber = user.PhoneNumber!,
+            Email = user.Email ?? "",
+            NumeroCodia = user.NumeroCodia
+        };
     }
 
     private async Task OnValidSubmitAsync()
@@ -68,24 +107,50 @@
             return;
         }
 
-        if (Input.PhoneNumber != phoneNumber)
+        user.NombreCompleto = Input.NombreCompleto;
+        user.Ciudad = Input.Ciudad;
+        user.Direccion = Input.Direccion;
+        user.PhoneNumber = Input.PhoneNumber;
+        user.Email = Input.Email;
+        user.UserName = Input.Email;
+
+        if (esAgrimensor)
         {
-            var setPhoneResult = await UserManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-            if (!setPhoneResult.Succeeded)
-            {
-                RedirectManager.RedirectToCurrentPageWithStatus("Error: Failed to set phone number.", HttpContext);
-                return;
-            }
+            user.NumeroCodia = Input.NumeroCodia;
+        }
+
+        var result = await UserManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            RedirectManager.RedirectToCurrentPageWithStatus("Error al actualizar el perfil.", HttpContext);
+            return;
         }
 
         await SignInManager.RefreshSignInAsync(user);
-        RedirectManager.RedirectToCurrentPageWithStatus("Your profile has been updated", HttpContext);
+        RedirectManager.RedirectToCurrentPageWithStatus("Perfil actualizado correctamente", HttpContext);
     }
 
-    private sealed class InputModel
+     private sealed class InputModel
     {
-        [Phone]
-        [Display(Name = "Phone number")]
-        public string? PhoneNumber { get; set; }
+        [Required]
+        public string NombreCompleto { get; set; } = "";
+
+        [Required]
+        public string NumeroCedula { get; set; } = "";
+
+        [Required]
+        public string Ciudad { get; set; } = "";
+
+        [Required]
+        public string Direccion { get; set; } = "";
+
+        [Required]
+        public string PhoneNumber { get; set; } = "";
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        public string? NumeroCodia { get; set; }
     }
 }
