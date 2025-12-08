@@ -1,0 +1,161 @@
+@page "/admin/dashboard"
+@attribute [Authorize(Roles = "Administrador")]
+@rendermode InteractiveServer
+
+@inject SolicitudesService solicitudesService
+@inject PagosService pagosService
+@inject NavigationManager navigationManager
+
+<PageTitle>Dashboard Administrativo</PageTitle>
+
+<div class="container py-4">
+
+    <h2 class="fw-bold mb-4 text-center">Panel Administrativo</h2>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Solicitudes</h6>
+                    <h3 class="fw-bold">@totalSolicitudes</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Pendientes</h6>
+                    <h3 class="fw-bold text-warning">@pendientes</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">En Proceso</h6>
+                    <h3 class="fw-bold text-primary">@enProceso</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Finalizadas</h6>
+                    <h3 class="fw-bold text-success">@finalizadas</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Pagos en Revisión</h6>
+                    <h3 class="fw-bold text-info">@pagosRevision</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Pagos Completados</h6>
+                    <h3 class="fw-bold text-success">@pagosCompletados</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Recaudado</h6>
+                    <h3 class="fw-bold text-primary">
+                        @totalRecaudado.ToString("C", new CultureInfo("es-DO"))
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow-lg mt-4">
+        <div class="card-header text-center bg-light">
+            <h5 class="fw-bold">Últimas Solicitudes</h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr class="text-center">
+                        <th>ID</th>
+                        <th>Cliente</th>
+                        <th>Estado</th>
+                        <th>Provincia</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var solicitud in ultimasSolicitudes)
+                    {
+                        <tr class="text-center">
+                            <td>@solicitud.SolicitudId</td>
+                            <td>@solicitud.Cliente!.NombreCompleto</td>
+                            <td><span class="badge bg-primary">@solicitud.Estado</span></td>
+                            <td>@solicitud.Provincia</td>
+                            <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a class="btn btn-sm btn-primary" href="/admin/ver-solicitud/@solicitud.SolicitudId">
+                                   <i class="bi bi-eye-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private int totalSolicitudes;
+    private int pendientes;
+    private int enProceso;
+    private int finalizadas;
+
+    private int pagosRevision;
+    private int pagosCompletados;
+
+    private decimal totalRecaudado;
+
+    private List<Solicitudes> ultimasSolicitudes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var solicitudes = await solicitudesService.Listar(s => s.SolicitudId > 0);
+        var pagos = await pagosService.Listar(p => p.PagoId > 0);
+
+        totalSolicitudes = solicitudes.Count;
+        pendientes = solicitudes.Count(s => s.Estado == "Pendiente");
+        enProceso = solicitudes.Count(s => s.Estado == "En Proceso");
+        finalizadas = solicitudes.Count(s => s.Estado == "Finalizado");
+
+        pagosRevision = pagos.Count(p => p.Estado == "Pendiente");
+        pagosCompletados = pagos.Count(p => p.Estado == "Completado");
+        totalRecaudado = pagos.Where(p => p.Estado == "Completado").Sum(p => p.Monto);
+
+        ultimasSolicitudes = solicitudes
+            .OrderByDescending(s => s.Fecha)
+            .Take(5)
+            .ToList();
+    }
+}
