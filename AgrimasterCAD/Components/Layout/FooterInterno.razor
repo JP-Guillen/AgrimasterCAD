@@ -19,7 +19,7 @@
                 <h4>Enlaces</h4>
                 <ul>
                     <li><i class="bi bi-chevron-right"></i> <a href="/">Inicio</a></li>
-                    <li><i class="bi bi-chevron-right"></i> <a href="/cliente/dashboard">Panel</a></li>
+                    <li><i class="bi bi-chevron-right"></i> <a href="@GetDashboardUrl">Panel</a></li>
                 </ul>
             </div>
 
@@ -40,3 +40,19 @@
     </div>
 
 </footer>
+
+@code {
+    private static string GetDashboardUrl(ClaimsPrincipal user)
+    {
+        if (user.IsInRole("Administrador"))
+            return "/admin/dashboard";
+
+        if (user.IsInRole("Agrimensor"))
+            return "/agrimensor/dashboard";
+
+        if (user.IsInRole("Cliente"))
+            return "/cliente/dashboard";
+
+        return "/";
+    }
+}
