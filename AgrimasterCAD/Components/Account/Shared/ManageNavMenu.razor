@@ -2,9 +2,11 @@
     <li class="nav-item">
         <NavLink class="nav-link" href="Account/Manage" Match="NavLinkMatch.All">Perfil</NavLink>
     </li>
+    <AuthorizeView Roles="Cliente">
         <li class="nav-item">
-        <NavLink class="nav-link" href="Account/Manage/ChangePassword">Password</NavLink>
+            <NavLink class="nav-link" href="Account/Manage/MetodosPago">Métodos de pago</NavLink>
         </li>
+    </AuthorizeView>
     <li class="nav-item">
         <NavLink class="nav-link" href="Account/Manage/ChangePassword">Cambiar contraseña</NavLink>
     </li>
