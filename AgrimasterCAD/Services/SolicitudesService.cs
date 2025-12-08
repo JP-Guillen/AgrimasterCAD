@@ -14,6 +14,12 @@ public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactor
         return await contexto.Solicitudes.AnyAsync(s => s.SolicitudId == solicitudId);
     }
 
+    public async Task<bool> ExisteAgrimensor(string agrimensorId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Users.AnyAsync(u => u.Id == agrimensorId);
+    }
+
     private async Task<bool> Insertar(Solicitudes solicitud)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
