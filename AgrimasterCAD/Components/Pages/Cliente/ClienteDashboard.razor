@@ -1,0 +1,134 @@
+﻿@page "/cliente/dashboard"
+@attribute [Authorize(Roles = "Cliente")]
+@rendermode InteractiveServer
+
+@inject SolicitudesService solicitudesService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject NavigationManager navigationManager
+
+<PageTitle>Dashboard Cliente</PageTitle>
+
+<div class="container py-4">
+
+    <h2 class="fw-bold text-center mb-4">Mi Panel</h2>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Mis Solicitudes</h6>
+                    <h3 class="fw-bold">@total</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">En Proceso</h6>
+                    <h3 class="fw-bold text-warning">@enProceso</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Pago Pendiente</h6>
+                    <h3 class="fw-bold text-info">@pagoPendiente</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">Finalizadas</h6>
+                    <h3 class="fw-bold text-success">@finalizadas</h3>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center mb-4">
+        <a class="btn btn-primary btn-lg" href="/cliente/crear-solicitud">
+            <i class="bi bi-file-plus"></i> Crear nueva solicitud
+        </a>
+    </div>
+
+    <div class="card shadow-lg">
+        <div class="card-header text-center bg-light">
+            <h5 class="fw-bold">Mis Últimas Solicitudes</h5>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr class="text-center">
+                        <th>ID</th>
+                        <th>Estado</th>
+                        <th>Provincia</th>
+                        <th>Fecha</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var solicitud in ultimas)
+                    {
+                        <tr class="text-center">
+                            <td>@solicitud.SolicitudId</td>
+                            <td><span class="badge bg-primary">@solicitud.Estado</span></td>
+                            <td>@solicitud.Provincia</td>
+                            <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <a class="btn btn-sm btn-primary" href="/cliente/ver-solicitud/@solicitud.SolicitudId">
+                                    <i class="bi bi-eye-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private string? userId;
+
+    private int total;
+    private int finalizadas;
+    private int enProceso;
+    private int pagoPendiente;
+
+    private List<Solicitudes> ultimas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (userId == null)
+        {
+            navigationManager.NavigateTo("/Account/Login");
+            return;
+        }
+
+        var solicitudes = await solicitudesService.Listar(s => s.ClienteId == userId);
+
+        total = solicitudes.Count;
+        finalizadas = solicitudes.Count(s => s.Estado == "Finalizado");
+        enProceso = solicitudes.Count(s => s.Estado == "En Proceso");
+        pagoPendiente = solicitudes.Count(s => s.Estado == "Pago Pendiente");
+
+        ultimas = solicitudes
+            .OrderByDescending(s => s.Fecha)
+            .Take(5)
+            .ToList();
+    }
+}
