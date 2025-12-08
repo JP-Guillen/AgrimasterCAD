@@ -37,6 +37,11 @@ public class NotificacionesService(IDbContextFactory<ApplicationDbContext> DbFac
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
         var notificacion = await contexto.Notificaciones.FindAsync(solicitudId);
+    public async Task<int> ContarNoLeidas(string usuarioId)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Notificaciones.CountAsync(n => n.UsuarioId == usuarioId && !n.Leida);
+    }
 
     public async Task MarcarTodasLeidas(string userId)
         {
