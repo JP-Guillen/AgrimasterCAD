@@ -300,8 +300,7 @@
         await notificacionesService.Crear(
             solicitud!.ClienteId,
             "Actualización de solicitud",
-            $"La solicitud #{solicitud.SolicitudId} fue actualizada por un administrador.",
-            "Info"
+            $"La solicitud #{solicitud.SolicitudId} fue actualizada por un administrador."
         );
 
         guardando = false;
@@ -355,8 +354,7 @@
         await notificacionesService.Crear(
             solicitud.ClienteId,
             "Reasignación de solicitud",
-            $"La solicitud #{solicitud.SolicitudId} fue reasignada a un nuevo agrimensor.",
-            "Warning"
+            $"La solicitud #{solicitud.SolicitudId} fue reasignada a un nuevo agrimensor."
         );
 
         mostrarModalReasignar = false;
@@ -385,8 +383,7 @@
         await notificacionesService.Crear(
             solicitud.ClienteId,
             "Pago aprobado",
-            $"Tu pago de la solicitud #{solicitud.SolicitudId} fue aprobado.",
-            "Success"
+            $"Tu pago de la solicitud #{solicitud.SolicitudId} fue aprobado."
         );
 
         solicitud = await solicitudesService.Buscar(SolicitudId);
@@ -403,8 +400,7 @@
         await notificacionesService.Crear(
             solicitud.ClienteId,
             "Pago rechazado",
-            $"Tu pago para la solicitud #{solicitud.SolicitudId} fue rechazado. Vuelve a intentarlo.",
-            "Danger"
+            $"Tu pago para la solicitud #{solicitud.SolicitudId} fue rechazado. Vuelve a intentarlo."
         );
 
         solicitud = await solicitudesService.Buscar(SolicitudId);

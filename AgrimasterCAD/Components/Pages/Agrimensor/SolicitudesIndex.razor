@@ -322,8 +322,7 @@
         await notificacionesService.Crear(
             actual.ClienteId,
             "Solicitud aceptada",
-            $"El agrimensor ha comenzado a trabajar tu solicitud #{actual.SolicitudId}.",
-            "Info"
+            $"El agrimensor ha comenzado a trabajar tu solicitud #{actual.SolicitudId}."
         );
 
         solicitudes = await solicitudesService.Listar(s => s.SolicitudId > 0);

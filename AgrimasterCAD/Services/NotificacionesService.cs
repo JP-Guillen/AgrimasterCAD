@@ -6,7 +6,7 @@ namespace AgrimasterCAD.Services;
 
 public class NotificacionesService(IDbContextFactory<ApplicationDbContext> DbFactory)
 {
-    public async Task Crear(string usuarioId, string titulo, string mensaje, string tipo = "info")
+    public async Task Crear(string usuarioId, string titulo, string mensaje)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
@@ -15,7 +15,6 @@ public class NotificacionesService(IDbContextFactory<ApplicationDbContext> DbFac
             UsuarioId = usuarioId,
             Titulo = titulo,
             Mensaje = mensaje,
-            Tipo = tipo,
             Fecha = DateTime.Now
         };
 

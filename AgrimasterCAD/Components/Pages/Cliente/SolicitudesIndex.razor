@@ -340,8 +340,7 @@
             await notificacionesService.Crear(
                 userId!,
                 "Solicitud eliminada",
-                $"Has eliminado tu solicitud #{solicitudAEliminar.SolicitudId}.",
-                "Warning"
+                $"Has eliminado tu solicitud #{solicitudAEliminar.SolicitudId}."
             );
 
             solicitudes.Remove(solicitudAEliminar);

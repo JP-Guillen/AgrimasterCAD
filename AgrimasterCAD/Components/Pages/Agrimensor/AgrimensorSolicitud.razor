@@ -324,8 +324,7 @@
                 await notificacionesService.Crear(
                     solicitud!.ClienteId,
                     "Nuevo seguimiento",
-                    $"Se agregó una actualización a tu solicitud #{solicitud.SolicitudId}.",
-                    "Info"
+                    $"Se agregó una actualización a tu solicitud #{solicitud.SolicitudId}."
                 );
 
                 nuevoSeguimiento = "";
@@ -348,8 +347,7 @@
                 await notificacionesService.Crear(
                     solicitud.ClienteId,
                     "Plano y costo final disponibles",
-                    $"Tu solicitud #{solicitud.SolicitudId} ya tiene plano y costo final. Puedes proceder al pago.",
-                    "Success"
+                    $"Tu solicitud #{solicitud.SolicitudId} ya tiene plano y costo final. Puedes proceder al pago."
                 );
             }
 

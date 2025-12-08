@@ -151,8 +151,7 @@
                 await notificacionesService.Crear(
                     solicitud.ClienteId,
                     "Solicitud creada",
-                    $"Tu solicitud #{solicitud.SolicitudId} fue registrada correctamente. Te avisaremos cuando un agrimensor la tome.",
-                    "Success"
+                    $"Tu solicitud #{solicitud.SolicitudId} fue registrada correctamente. Te avisaremos cuando un agrimensor la tome."
                 );
 
                 navigationManager.NavigateTo("/cliente/solicitudes");

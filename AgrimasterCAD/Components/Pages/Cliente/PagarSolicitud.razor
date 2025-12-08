@@ -235,8 +235,7 @@
                 await notificacionesService.Crear(
                     solicitud.ClienteId,
                     "Pago completado",
-                    $"Tu pago de la solicitud #{solicitud.SolicitudId} fue procesado exitosamente.",
-                    "Success"
+                    $"Tu pago de la solicitud #{solicitud.SolicitudId} fue procesado exitosamente."
                 );
 
                 solicitud.Estado = "Finalizado";
@@ -250,15 +249,13 @@
                     await notificacionesService.Crear(
                         solicitud.ClienteId,
                         "Pago en revisión",
-                        $"Tu comprobante para la solicitud #{solicitud.SolicitudId} fue recibido y está en revisión.",
-                        "Info"
+                        $"Tu comprobante para la solicitud #{solicitud.SolicitudId} fue recibido y está en revisión."
                     );
 
                     await notificacionesService.Crear(
                         "100",
                         "Pago pendiente por validar",
-                        $"El cliente {solicitud.Cliente!.NombreCompleto} subió un comprobante de pago para la solicitud #{solicitud.SolicitudId}.",
-                        "Warning"
+                        $"El cliente {solicitud.Cliente!.NombreCompleto} subió un comprobante de pago para la solicitud #{solicitud.SolicitudId}."
                     );
                 }
                 else if (metodoPago == "Efectivo")
@@ -266,15 +263,13 @@
                     await notificacionesService.Crear(
                         solicitud.ClienteId,
                         "Pago en revisión",
-                        $"Has indicado pago en efectivo para la solicitud #{solicitud.SolicitudId}. El administrador deberá confirmarlo.",
-                        "Info"
+                        $"Has indicado pago en efectivo para la solicitud #{solicitud.SolicitudId}. El administrador deberá confirmarlo."
                     );
 
                     await notificacionesService.Crear(
                         "100",
                         "Pago en efectivo pendiente",
-                        $"El cliente {solicitud.Cliente!.NombreCompleto} indicó pago en efectivo para la solicitud #{solicitud.SolicitudId}. Debe confirmarse.",
-                        "Info"
+                        $"El cliente {solicitud.Cliente!.NombreCompleto} indicó pago en efectivo para la solicitud #{solicitud.SolicitudId}. Debe confirmarse."
                     );
                 }
 

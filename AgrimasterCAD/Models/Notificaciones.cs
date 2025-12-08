@@ -11,7 +11,6 @@ public class Notificaciones
     public string UsuarioId { get; set; } = string.Empty;
     public string Titulo { get; set; } = string.Empty;
     public string Mensaje { get; set; } = string.Empty;
-    public string Tipo { get; set; } = string.Empty;
     public bool Leida { get; set; } = false;
     public DateTime Fecha { get; set; } = DateTime.Now;
 

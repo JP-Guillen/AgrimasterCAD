@@ -372,8 +372,8 @@
 
         await notificacionesService.Crear(solicitud.ClienteId,
             "Solicitud reasignada",
-            $"Tu solicitud #{solicitud.SolicitudId} fue reasignada a un nuevo agrimensor.",
-            "Warning");
+            $"Tu solicitud #{solicitud.SolicitudId} fue reasignada a un nuevo agrimensor."
+        );
 
         CerrarModales();
     }
@@ -389,8 +389,8 @@
 
         await notificacionesService.Crear(solicitud.ClienteId,
             "Solicitud cancelada",
-            $"Tu solicitud #{solicitud.SolicitudId} fue cancelada. Motivo: {motivoCancelacion}",
-            "Danger");
+            $"Tu solicitud #{solicitud.SolicitudId} fue cancelada. Motivo: {motivoCancelacion}"
+        );
 
         CerrarModales();
     }
