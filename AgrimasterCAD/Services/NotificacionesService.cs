@@ -25,8 +25,8 @@ public class NotificacionesService(IDbContextFactory<ApplicationDbContext> DbFac
 
     public async Task<List<Notificaciones>> Listar(string usuarioId)
     {
-        await using var db = await DbFactory.CreateDbContextAsync();
-        return await db.Notificaciones
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Notificaciones
             .Where(n => n.UsuarioId == usuarioId)
             .OrderByDescending(n => n.Fecha)
             .ToListAsync();
