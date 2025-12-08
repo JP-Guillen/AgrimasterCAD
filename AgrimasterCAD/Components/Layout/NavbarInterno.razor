@@ -1,0 +1,79 @@
+@inject AuthenticationStateProvider Auth
+@inject NavigationManager Nav
+
+<header id="header" class="header sticky-top">
+    <div class="branding d-flex align-items-center">
+        <div class="container position-relative d-flex align-items-center justify-content-between">
+
+            <a href="/" class="logo d-flex align-items-center">
+                <img src="/favicon.png" alt="">
+                <h1 class="sitename">AgrimasterCAD</h1>
+            </a>
+
+            <label for="mobile-nav-toggle-in" class="mobile-nav-toggle d-xl-none">
+                <i class="bi bi-list"></i>
+            </label>
+
+            <input type="checkbox" id="mobile-nav-toggle-in" hidden>
+
+            <nav id="navmenu" class="navmenu">
+                <ul>
+                    <AuthorizeView>
+                        <Authorized Context="auth">
+
+                            @if (auth.User.IsInRole("Administrador"))
+                            {
+                                <li><a href="/admin/dashboard">Dashboard</a></li>
+                                <li><a href="/admin/agrimensores">Agrimensores</a></li>
+                                <li><a href="/admin/clientes">Clientes</a></li>
+                                <li><a href="/admin/solicitudes">Solicitudes</a></li>
+                            }
+
+                            @if (auth.User.IsInRole("Agrimensor"))
+                            {
+                                <li><a href="/agrimensor/dashboard">Dashboard</a></li>
+                                <li><a href="/agrimensor/solicitudes">Solicitudes</a></li>
+                            }
+
+                            @if (auth.User.IsInRole("Cliente"))
+                            {
+                                <li><a href="/cliente/dashboard">Dashboard</a></li>
+                                <li><a href="/cliente/solicitudes">Mis Solicitudes</a></li>
+                            }
+
+                            <li><a href="@GetNotiUrl(auth.User)">Notificaciones</a></li>
+                            <li><a href="/Account/Manage">Perfil</a></li>
+
+                            <li>
+                                <form action="/Account/Logout" method="post">
+                                    <input type="hidden" name="ReturnUrl" value="@Nav.Uri" />
+                                    <button style="background:none;border:none;color:var(--nav-color);padding:18px 15px;">
+                                        Cerrar Sesión
+                                    </button>
+                                </form>
+                            </li>
+
+                        </Authorized>
+
+                        <NotAuthorized>
+                            <li><a href="/">Inicio</a></li>
+                            <li><a href="/Account/Login">Iniciar Sesión</a></li>
+                            <li><a href="/Account/Register">Registrarse</a></li>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </ul>
+            </nav>
+
+        </div>
+    </div>
+</header>
+
+@code {
+    private string GetNotiUrl(ClaimsPrincipal user)
+    {
+        if (user.IsInRole("Administrador")) return "/admin/notificaciones";
+        if (user.IsInRole("Agrimensor")) return "/agrimensor/notificaciones";
+        if (user.IsInRole("Cliente")) return "/cliente/notificaciones";
+        return "/";
+    }
+}
