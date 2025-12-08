@@ -78,7 +78,7 @@ else
 
                 <div class="card-footer">
                     <div class="d-flex justify-content-center gap-2">
-                            <a href="/admin/clientes" class="btn btn-secondary">
+                        <a href="/admin/clientes" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Volver
                         </a>
 
@@ -135,22 +135,34 @@ else
         guardando = true;
         errorMensaje = null;
 
-        var cedulaExiste = UserManager.Users
-            .Any(u => u.NumeroCedula == cliente!.NumeroCedula && u.Id != usuarioDb!.Id);
+        var cedulaExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NumeroCedula == cliente!.NumeroCedula);
 
-        if (cedulaExiste)
+        if (cedulaExistente != null && cedulaExistente.Id != usuarioDb!.Id)
         {
-            errorMensaje = "Ya existe un cliente con la misma cédula.";
+            errorMensaje = "Ya existe un agrimensor con la misma cédula.";
             guardando = false;
             return;
         }
 
-        var emailExiste = UserManager.Users
-            .Any(u => u.Email == cliente!.Email && u.Id != usuarioDb!.Id);
+        var telefonoExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.PhoneNumber == cliente!.PhoneNumber);
 
-        if (emailExiste)
+        if (telefonoExistente != null)
         {
-            errorMensaje = "El correo ya está en uso.";
+            errorMensaje = "El número de teléfono ya está en uso.";
+            guardando = false;
+            return;
+        }
+
+        var emailNormalizado = cliente!.Email.Trim().ToUpper();
+
+        var emailExistente = await UserManager.Users
+            .FirstOrDefaultAsync(u => u.NormalizedEmail == emailNormalizado);
+
+        if (emailExistente != null && emailExistente.Id != usuarioDb!.Id)
+        {
+            errorMensaje = "El correo electrónico ya está en uso.";
             guardando = false;
             return;
         }
