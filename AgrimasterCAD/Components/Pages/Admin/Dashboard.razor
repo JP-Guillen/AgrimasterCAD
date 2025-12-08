@@ -1,4 +1,5 @@
 @page "/admin/dashboard"
+@layout AppLayout
 @attribute [Authorize(Roles = "Administrador")]
 @rendermode InteractiveServer
 
@@ -113,7 +114,7 @@
                             <td>@solicitud.Provincia</td>
                             <td>@solicitud.Fecha.ToString("dd/MM/yyyy")</td>
                             <td>
-                                <a class="btn btn-sm btn-primary" href="/admin/ver-solicitud/@solicitud.SolicitudId">
+                                <a class="btn btn-sm btn-primary" href="/admin/solicitud/@solicitud.SolicitudId">
                                    <i class="bi bi-eye-fill"></i>
                                 </a>
                             </td>
