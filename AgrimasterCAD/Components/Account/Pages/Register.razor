@@ -114,6 +114,20 @@
             return;
         }
 
+        var telefonoExiste = await UserManager.Users
+            .AnyAsync(u => u.PhoneNumber == Input.PhoneNumber);
+
+        
+        if (telefonoExiste)
+        {
+            identityErrors = new IdentityError[]
+            {
+                new IdentityError { Description = "Ya existe un usuario registrado con esta cédula." }
+            };
+
+            return;
+        }
+
         var emailExiste = await UserManager.Users
             .AnyAsync(u => u.Email == Input.Email);
 
