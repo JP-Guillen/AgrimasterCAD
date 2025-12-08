@@ -2,6 +2,7 @@ using AgrimasterCAD.Data;
 using AgrimasterCAD.Models;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace AgrimasterCAD.Services;
 
@@ -60,5 +61,11 @@ public class PagosService(IDbContextFactory<ApplicationDbContext> DbFactory, IWe
         {
             return null;
         }
+    }
+
+    public async Task<List<Pagos>> Listar(Expression<Func<Pagos, bool>> criterio)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Pagos.Where(criterio).Include(p => p.Solicitud).ToListAsync();
     }
 }
