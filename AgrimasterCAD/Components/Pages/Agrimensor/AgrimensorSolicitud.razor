@@ -203,17 +203,19 @@
             }
         </div>
 
-        <div class="card-footer text-center">
-            <a href="/agrimensor/solicitudes" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Volver
-            </a>
+        <div class="card-footer">
+            <div class="d-flex justify-content-center gap-2">
+                <a href="/agrimensor/solicitudes" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
 
-            @if (PuedeEditar)
-            {
-                <button class="btn btn-success" @onclick="Guardar" disabled="@guardando">
-                    <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
-                </button>
-            }
+                @if (PuedeEditar)
+                {
+                    <button class="btn btn-success" @onclick="Guardar" disabled="@guardando">
+                        <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
+                    </button>
+                }
+            </div>
         </div>
     </div>
 </div>
