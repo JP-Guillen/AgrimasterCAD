@@ -1,0 +1,423 @@
+@page "/admin/solicitud/{SolicitudId:int}"
+@attribute [Authorize(Roles = "Administrador")]
+@rendermode InteractiveServer
+
+@inject SolicitudesService solicitudesService
+@inject PagosService pagosService
+@inject ComprobantesPagoService comprobantesPagoService
+@inject NotificacionesService notificacionesService
+@inject NavigationManager navigationManager
+
+<PageTitle>Detalles de Solicitud</PageTitle>
+
+<div class="container py-5">
+    <div class="card shadow-lg">
+        <div class="card-header text-center">
+            <h4 class="card-title fw-bold">
+                <i class="bi bi-file-earmark-text-fill"></i> Solicitud #@SolicitudId
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            @if (cargando)
+            {
+                <div class="text-center my-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p>Cargando solicitud...</p>
+                </div>
+            }
+            else
+            {
+                <h5 class="fw-bold mb-3">Información General</h5>
+
+                <div class="row g-3 mb-3">
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Estado</label>
+                        <InputSelect class="form-select" @bind-Value="solicitud!.Estado">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Asignado">Asignado</option>
+                            <option value="En Proceso">En Proceso</option>
+                            <option value="Pago Pendiente">Pago Pendiente</option>
+                            <option value="Pago en Revisión">Pago en Revisión</option>
+                            <option value="Finalizado">Finalizado</option>
+                            <option value="Cancelado">Cancelado</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Fecha Solicitud</label>
+                        <input class="form-control" disabled value="@solicitud.Fecha.ToString("dd/MM/yyyy")" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Fecha Aceptada</label>
+                        <input class="form-control" disabled value="@(solicitud.FechaAceptada?.ToString("dd/MM/yyyy") ?? "-")" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Fecha Finalizada</label>
+                        <input class="form-control" disabled value="@(solicitud.FechaFinalizada?.ToString("dd/MM/yyyy") ?? "-")" />
+                    </div>
+                </div>
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Cliente</h5>
+
+                <p><b>Nombre:</b> @solicitud!.Cliente!.NombreCompleto</p>
+                <p><b>Cédula:</b> @solicitud.Cliente.NumeroCedula</p>
+                <p><b>Email:</b> @solicitud.Cliente.Email</p>
+                <p><b>Teléfono:</b> @solicitud.Cliente.PhoneNumber</p>
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Agrimensor</h5>
+
+                @if (solicitud.Agrimensor != null)
+                {
+                    <p><b>Nombre:</b> @solicitud.Agrimensor.NombreCompleto</p>
+                    <p><b>CODIA:</b> @solicitud.Agrimensor.NumeroCodia</p>
+                    <button class="btn btn-warning btn-sm" @onclick="AbrirModalReasignar">
+                        <i class="bi bi-arrow-left-right"></i> Reasignar
+                    </button>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Sin asignar</span>
+                    <button class="btn btn-warning btn-sm" @onclick="AbrirModalReasignar">
+                        <i class="bi bi-person-plus-fill"></i> Asignar Agrimensor
+                    </button>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Ubicación del Terreno</h5>
+
+                <p><b>Provincia:</b> @solicitud.Provincia</p>
+                <p><b>Municipio:</b> @solicitud.Municipio</p>
+                <p><b>Dirección:</b> @solicitud.Direccion</p>
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Documentos</h5>
+
+                @if (solicitud.Documentos.Any())
+                {
+                    @foreach (var documento in solicitud.Documentos)
+                    {
+                        <p>
+                            <b>@documento.Tipo:</b>
+                            <a href="@documento.RutaArchivo" target="_blank" class="btn btn-link">Ver PDF</a>
+                        </p>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No hay documentos disponibles.</p>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Plano</h5>
+
+                @if (solicitud.Plano != null)
+                {
+                    <a href="@solicitud.Plano.RutaArchivo" class="btn btn-info" target="_blank">
+                        <i class="bi bi-file-richtext"></i> Ver Plano
+                    </a>
+                }
+                else
+                {
+                    <p class="text-muted">Aún no se ha subido el plano.</p>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Pagos</h5>
+
+                @if (!solicitud.Pagos.Any())
+                {
+                    <p class="text-muted">Aún no hay pagos.</p>
+                }
+                else
+                {
+                    <table class="table table-bordered">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Método</th>
+                                <th>Monto</th>
+                                <th>Estado</th>
+                                <th>Comprobante</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var pago in solicitud.Pagos.OrderByDescending(p => p.Fecha))
+                            {
+                                <tr>
+                                    <td>@pago.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>@pago.Metodo</td>
+                                    <td>@pago.Monto.ToString("C", new CultureInfo("es-DO"))</td>
+                                    <td>
+                                        <span class="@ObtenerClasePago(pago.Estado)">
+                                            @pago.Estado
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(pago.ReciboRuta))
+                                        {
+                                            <a href="@pago.ReciboRuta" target="_blank" class="btn btn-sm btn-primary">
+                                                <i class="bi bi-eye-fill"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (pago.Estado == "Pendiente")
+                                        {
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <button class="btn btn-success btn-sm" @onclick="() => AprobarPago(pago)">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+
+                                                <button class="btn btn-danger btn-sm" @onclick="() => RechazarPago(pago)">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </div>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <hr />
+
+                <h5 class="fw-bold mb-3">Seguimiento</h5>
+
+                @foreach (var seguimiento in solicitud.Seguimientos.OrderByDescending(s => s.Fecha))
+                {
+                    <div class="alert alert-secondary">
+                        <b>@seguimiento.Fecha.ToString("dd/MM/yyyy HH:mm"):</b> @seguimiento.Comentario
+                    </div>
+                }
+
+                <textarea class="form-control mb-2" placeholder="Nuevo comentario..." @bind="nuevoSeguimiento"></textarea>
+                <button class="btn btn-secondary btn-sm" @onclick="AgregarSeguimiento">Agregar Seguimiento</button>
+
+            }
+
+        </div>
+
+        <div class="card-footer">
+            <div class="d-flex justify-content-center gap-2">
+                <a href="/admin/solicitudes" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+
+                <button class="btn btn-success" @onclick="Guardar" disabled="@guardando">
+                    <i class="bi bi-floppy"></i> @(guardando ? "Guardando..." : "Guardar")
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@if (mostrarModalReasignar)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,.5)">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">Reasignar Agrimensor</h5>
+                    <button class="btn-close" @onclick="CerrarModalReasignar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <label class="form-label fw-bold">ID del nuevo Agrimensor</label>
+                    <InputText class="form-control" @bind-Value="nuevoAgrimensorId" />
+
+                    @if (!string.IsNullOrEmpty(errorAgrimensor))
+                    {
+                        <div class="alert alert-danger mt-2">
+                            @errorAgrimensor
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="CerrarModalReasignar">Cancelar</button>
+                    <button class="btn btn-warning" @onclick="ConfirmarReasignacion">Reasignar</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int SolicitudId { get; set; }
+
+    private Solicitudes? solicitud;
+    private bool cargando = true;
+    private bool guardando = false;
+
+    private string nuevoSeguimiento = "";
+    private bool mostrarModalReasignar = false;
+    private string nuevoAgrimensorId = "";
+
+    private string? errorAgrimensor;
+
+    protected override async Task OnInitializedAsync()
+    {
+        solicitud = await solicitudesService.Buscar(SolicitudId);
+
+        if (solicitud == null)
+        {
+            navigationManager.NavigateTo("/not-found");
+            return;
+        }
+
+        cargando = false;
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+
+        await solicitudesService.Guardar(solicitud!);
+
+        await notificacionesService.Crear(
+            solicitud!.ClienteId,
+            "Actualización de solicitud",
+            $"La solicitud #{solicitud.SolicitudId} fue actualizada por un administrador.",
+            "Info"
+        );
+
+        guardando = false;
+
+        navigationManager.NavigateTo($"/admin/solicitud/{SolicitudId}", true);
+    }
+
+    private async Task AgregarSeguimiento()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoSeguimiento))
+            return;
+
+        await solicitudesService.AgregarSeguimiento(SolicitudId, nuevoSeguimiento);
+        nuevoSeguimiento = "";
+
+        solicitud = await solicitudesService.Buscar(SolicitudId);
+    }
+
+    private void AbrirModalReasignar()
+    {
+        mostrarModalReasignar = true;
+    }
+
+    private void CerrarModalReasignar()
+    {
+        mostrarModalReasignar = false;
+        nuevoAgrimensorId = "";
+    }
+
+    private async Task ConfirmarReasignacion()
+    {
+        errorAgrimensor = "";
+
+        if (string.IsNullOrWhiteSpace(nuevoAgrimensorId))
+        {
+            errorAgrimensor = "Debe ingresar un ID.";
+            return;
+        }
+
+        if (!await solicitudesService.ExisteAgrimensor(nuevoAgrimensorId))
+        {
+            errorAgrimensor = "El agrimensor no existe. Verifique el ID.";
+            return;
+        }
+
+        solicitud!.AgrimensorId = nuevoAgrimensorId;
+        solicitud.Estado = "Asignado";
+
+        await solicitudesService.Guardar(solicitud);
+
+        await notificacionesService.Crear(
+            solicitud.ClienteId,
+            "Reasignación de solicitud",
+            $"La solicitud #{solicitud.SolicitudId} fue reasignada a un nuevo agrimensor.",
+            "Warning"
+        );
+
+        mostrarModalReasignar = false;
+        nuevoAgrimensorId = "";
+    }
+
+    private async Task AprobarPago(Pagos pago)
+    {
+        pago.Estado = "Completado";
+        await pagosService.Guardar(pago);
+
+        var comprobante = new ComprobantesPago
+        {
+            SolicitudId = solicitud!.SolicitudId,
+            Monto = pago.Monto,
+            Metodo = pago.Metodo
+        };
+
+        await comprobantesPagoService.Guardar(comprobante);
+
+        solicitud.Estado = "Finalizado";
+        solicitud.FechaFinalizada = DateTime.Now;
+
+        await solicitudesService.Guardar(solicitud);
+
+        await notificacionesService.Crear(
+            solicitud.ClienteId,
+            "Pago aprobado",
+            $"Tu pago de la solicitud #{solicitud.SolicitudId} fue aprobado.",
+            "Success"
+        );
+
+        solicitud = await solicitudesService.Buscar(SolicitudId);
+    }
+
+    private async Task RechazarPago(Pagos pago)
+    {
+        pago.Estado = "Rechazado";
+        await pagosService.Guardar(pago);
+
+        solicitud!.Estado = "Pago Pendiente";
+        await solicitudesService.Guardar(solicitud);
+
+        await notificacionesService.Crear(
+            solicitud.ClienteId,
+            "Pago rechazado",
+            $"Tu pago para la solicitud #{solicitud.SolicitudId} fue rechazado. Vuelve a intentarlo.",
+            "Danger"
+        );
+
+        solicitud = await solicitudesService.Buscar(SolicitudId);
+    }
+
+    private string ObtenerClasePago(string estado)
+    {
+        return estado switch
+        {
+            "Completado" => "badge bg-success",
+            "Pendiente" => "badge bg-warning text-dark",
+            "Rechazado" => "badge bg-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+}
