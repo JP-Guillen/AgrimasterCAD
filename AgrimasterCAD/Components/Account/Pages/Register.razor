@@ -100,6 +100,34 @@
 
     public async Task RegisterUser(EditContext editContext)
     {
+        identityErrors = null;
+
+        var cedulaExiste = await UserManager.Users
+            .AnyAsync(u => u.NumeroCedula == Input.NumeroCedula);
+
+        if (cedulaExiste)
+        {
+            identityErrors = new IdentityError[]
+            {
+                new IdentityError { Description = "Ya existe un usuario registrado con esta cédula." }
+            };
+
+            return;
+        }
+
+        var emailExiste = await UserManager.Users
+            .AnyAsync(u => u.Email == Input.Email);
+
+        if (emailExiste)
+        {
+            identityErrors = new IdentityError[]
+            {
+                new IdentityError { Description = "Este correo ya está registrado." }
+            };
+            
+            return;
+        }
+
         var user = CreateUser();
 
         user.NombreCompleto = Input.NombreCompleto;
