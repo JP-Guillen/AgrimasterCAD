@@ -24,7 +24,15 @@ public class SolicitudesService(IDbContextFactory<ApplicationDbContext> DbFactor
     private async Task<bool> Modificar(Solicitudes solicitud)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        contexto.Solicitudes.Update(solicitud);
+
+        var sol = await contexto.Solicitudes
+            .FirstOrDefaultAsync(s => s.SolicitudId == solicitud.SolicitudId);
+
+        if (sol == null)
+            return false;
+
+        contexto.Entry(sol).CurrentValues.SetValues(solicitud);
+
         return await contexto.SaveChangesAsync() > 0;
     }
 
