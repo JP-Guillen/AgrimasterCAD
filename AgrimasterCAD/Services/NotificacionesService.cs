@@ -32,11 +32,17 @@ public class NotificacionesService(IDbContextFactory<ApplicationDbContext> DbFac
             .ToListAsync();
     }
 
-    public async Task MarcarLeida(int solicitudId)
+    public async Task MarcarLeida(int id)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        var notificacion = await contexto.Notificaciones.FindAsync(solicitudId);
+        var notificacion = await contexto.Notificaciones.FirstOrDefaultAsync(n => n.NotificacionId == id);
+        if (notificacion == null) return;
+
+        notificacion.Leida = true;
+        await contexto.SaveChangesAsync();
+    }
+
     public async Task<int> ContarNoLeidas(string usuarioId)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
