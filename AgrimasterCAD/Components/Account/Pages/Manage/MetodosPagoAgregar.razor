@@ -1,0 +1,186 @@
+@page "/Account/Manage/MetodosPago"
+@layout ManageLayout
+@attribute [Authorize(Roles = "Cliente")]
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@using AgrimasterCAD.Data
+@using AgrimasterCAD.Models
+@using AgrimasterCAD.Services
+
+@inject AuthenticationStateProvider AuthProvider
+@inject UserManager<ApplicationUser> UserManager
+@inject MetodosPagoService MetodosPagoService
+@inject NavigationManager Navigation
+@inject IdentityRedirectManager RedirectManager
+
+<PageTitle>Métodos de Pago</PageTitle>
+
+<div class="row">
+    <div class="col-xl-6">
+
+        <h3 class="mb-3">Mis métodos de pago</h3>
+
+        @if (metodos is null)
+        {
+            <p>Cargando...</p>
+        }
+        else if (!metodos.Any())
+        {
+            <div class="alert alert-info">No has agregado métodos de pago.</div>
+        }
+        else
+        {
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Últimos 4 dígitos</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var metodo in metodos)
+                    {
+                        <tr>
+                            <td>@metodo.Tipo</td>
+                            <td>@metodo.Ultimos4Digitos</td>
+                            <td>
+                                <button class="btn btn-danger btn-sm"
+                                        @onclick="() => Eliminar(metodo.MetodoPagoId)">
+                                    Eliminar
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        <hr />
+
+        <EditForm Model="Input" OnValidSubmit="Guardar" method="post" FormName="AgregarMetodoPago">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+
+            <h3>Agregar método de pago</h3>
+
+            <div class="form-floating mb-3">
+                <InputSelect class="form-select" @bind-Value="Input.Tipo" id="tipoTarjeta">
+                    <option value="">Seleccione un tipo</option>
+                    <option value="Visa">Visa</option>
+                    <option value="Mastercard">Mastercard</option>
+                    <option value="Amex">American Express</option>
+                    <option value="Discover">Discover</option>
+                </InputSelect>
+                <label>Tipo de tarjeta</label>
+                <ValidationMessage For="() => Input.Tipo" class="text-danger" />
+            </div>
+
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Ultimos4Digitos" class="form-control" maxlength="4" />
+                <label>Últimos 4 dígitos</label>
+                <ValidationMessage For="() => Input.Ultimos4Digitos" class="text-danger" />
+            </div>
+
+            @if (!string.IsNullOrEmpty(ErrorMensaje))
+            {
+                <div class="alert alert-danger">@ErrorMensaje</div>
+            }
+
+            <button type="submit" class="w-100 btn btn-primary">Guardar</button>
+
+        </EditForm>
+    </div>
+</div>
+
+@code {
+
+    private ApplicationUser? user;
+    private string ErrorMensaje = "";
+
+    private List<MetodosPago>? metodos;
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var claimsPrincipal = authState.User;
+
+        user = await UserManager.GetUserAsync(claimsPrincipal);
+
+        if (user is null)
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
+
+        metodos = await MetodosPagoService.ListarPorUsuario(user.Id);
+    }
+
+    private async Task Guardar()
+    {
+        ErrorMensaje = "";
+
+        if (user is null)
+        {
+            Navigation.NavigateTo("/Account/Login");
+            return;
+        }
+
+        if (Input.Ultimos4Digitos.Length != 4)
+        {
+            ErrorMensaje = "Debe ingresar exactamente los últimos 4 dígitos.";
+            return;
+        }
+
+        var metodo = new MetodosPago
+        {
+            UsuarioId = user.Id,
+            Tipo = Input.Tipo,
+            Ultimos4Digitos = Input.Ultimos4Digitos
+        };
+
+        var ok = await MetodosPagoService.Guardar(metodo);
+
+        if (!ok)
+        {
+            ErrorMensaje = "No se pudo guardar el método de pago.";
+            return;
+        }
+
+        metodos = await MetodosPagoService.ListarPorUsuario(user.Id);
+
+        Input = new();
+
+        ErrorMensaje = "";
+    }
+
+    private async Task Eliminar(int id)
+    {
+        if (user is null)
+            return;
+
+        var ok = await MetodosPagoService.Eliminar(id, user.Id);
+
+        if (!ok)
+        {
+            ErrorMensaje = "No se pudo eliminar.";
+            return;
+        }
+
+        metodos = await MetodosPagoService.ListarPorUsuario(user.Id);
+    }
+
+    public class InputModel
+    {
+        [Required(ErrorMessage = "Debe seleccionar un tipo de método de pago.")]
+        public string Tipo { get; set; } = "";
+
+        [RegularExpression(@"^\d{4}$", ErrorMessage = "Solo se permiten 4 dígitos.")]
+        public string Ultimos4Digitos { get; set; } = "";
+    }
+}
